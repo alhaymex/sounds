@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -10,7 +13,11 @@ pub struct Settings {
 
 impl Settings {
     pub fn load() -> Result<Self> {
-        let path = settings_path()?;
+        Self::load_from(settings_path()?)
+    }
+
+    pub fn load_from(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref();
 
         if !path.exists() {
             return Ok(Self::default());
@@ -26,7 +33,11 @@ impl Settings {
     }
 
     pub fn save(&self) -> Result<()> {
-        let path = settings_path()?;
+        self.save_to(settings_path()?)
+    }
+
+    pub fn save_to(&self, path: impl AsRef<Path>) -> Result<()> {
+        let path = path.as_ref();
 
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).with_context(|| {
@@ -52,4 +63,78 @@ pub fn settings_path() -> Result<PathBuf> {
 
 pub fn default_library_dir() -> Option<PathBuf> {
     dirs::audio_dir()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn load_from_missing_file_returns_default_settings() -> Result<()> {
+        let temp = tempdir()?;
+        let path = temp.path().join("settings.json");
+
+        let settings = Settings::load_from(&path)?;
+
+        assert!(settings.library_dir.is_none());
+
+        Ok(())
+    }
+
+    #[test]
+    fn save_to_writes_settings_json() -> Result<()> {
+        let temp = tempdir()?;
+        let path = temp.path().join("settings.json");
+
+        let music_dir = temp.path().join("Music");
+
+        let settings = Settings {
+            library_dir: Some(music_dir.clone()),
+        };
+
+        settings.save_to(&path)?;
+
+        let contents = fs::read_to_string(&path)?;
+
+        assert!(contents.contains("library_dir"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn saved_settings_can_be_loaded_again() -> Result<()> {
+        let temp = tempdir()?;
+        let path = temp.path().join("settings.json");
+
+        let music_dir = temp.path().join("Music");
+
+        let settings = Settings {
+            library_dir: Some(music_dir.clone()),
+        };
+
+        settings.save_to(&path)?;
+
+        let loaded = Settings::load_from(&path)?;
+
+        assert_eq!(loaded.library_dir, Some(music_dir));
+
+        Ok(())
+    }
+
+    #[test]
+    fn save_to_creates_parent_directories() -> Result<()> {
+        let temp = tempdir()?;
+        let path = temp.path().join("sounds/settings.json");
+
+        let settings = Settings {
+            library_dir: Some(temp.path().join("Music")),
+        };
+
+        settings.save_to(&path)?;
+
+        assert!(path.exists());
+
+        Ok(())
+    }
 }
