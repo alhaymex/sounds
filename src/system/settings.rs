@@ -24,10 +24,32 @@ impl Settings {
 
         Ok(settings)
     }
+
+    pub fn save(&self) -> Result<()> {
+        let path = settings_path()?;
+
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).with_context(|| {
+                format!("failed to create {}", parent.display())
+            })?;
+        }
+
+        let contents = serde_json::to_string_pretty(self)
+            .context("failed to serialize settings")?;
+
+        fs::write(&path, contents)
+            .with_context(|| format!("failed to write {}", path.display()))?;
+
+        Ok(())
+    }
 }
 
 pub fn settings_path() -> Result<PathBuf> {
     let config_dir =
         dirs::config_dir().context("could not determine config directory")?;
     Ok(config_dir.join("sounds").join("settings.json"))
+}
+
+pub fn default_library_dir() -> Option<PathBuf> {
+    dirs::audio_dir()
 }

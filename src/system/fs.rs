@@ -1,20 +1,25 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-pub fn scan_library(dir: impl AsRef<Path>) -> std::io::Result<Vec<PathBuf>> {
-    let mut files = Vec::new();
+pub fn is_audio_file(path: &Path) -> bool {
+    matches!(
+        path.extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext.to_ascii_lowercase())
+            .as_deref(),
+        Some("mp3" | "flac" | "wav" | "ogg")
+    )
+}
 
-    for entry in std::fs::read_dir(dir)? {
-        let path = entry?.path();
+pub fn song_title_from_path(path: &Path) -> String {
+    path.file_stem()
+        .and_then(|name| name.to_str())
+        .unwrap_or("Unknown")
+        .to_string()
+}
 
-        if let Some(ext) = path.extension() {
-            match ext.to_str() {
-                Some("mp3" | "flac" | "wav" | "ogg") => {
-                    files.push(path);
-                }
-                _ => {}
-            }
-        }
-    }
-
-    Ok(files)
+pub fn dir_name(path: &Path) -> String {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("/")
+        .to_string()
 }
