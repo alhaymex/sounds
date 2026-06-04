@@ -63,6 +63,7 @@ pub fn settings_path() -> Result<PathBuf> {
 
 pub fn default_library_dir() -> Option<PathBuf> {
     dirs::audio_dir()
+        .or_else(|| dirs::home_dir().map(|home| home.join("Music")))
 }
 
 #[cfg(test)]

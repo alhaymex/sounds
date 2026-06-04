@@ -1,11 +1,7 @@
 use std::path::PathBuf;
 
 use crate::{
-    library::{
-        self,
-        model::Library,
-        scan::{self, scan_library},
-    },
+    library::{model::Library, scan::scan_library},
     system::settings::{Settings, default_library_dir},
 };
 
@@ -21,7 +17,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(&self) -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let settings = Settings::load()?;
 
         let library_dir = settings
@@ -50,11 +46,11 @@ impl App {
         Ok(())
     }
 
-    fn library(&self) -> &Library {
+    pub fn library(&self) -> &Library {
         &self.library
     }
 
-    fn screen(&self) -> &Screen {
+    pub fn screen(&self) -> &Screen {
         &self.screen
     }
 }

@@ -6,8 +6,13 @@ mod tui;
 
 use anyhow::{Ok, Result};
 
+use crate::app::App;
+
 fn main() -> Result<()> {
-    println!("Hello Sounds");
+    let app = App::new()?;
+
+    println!("Scanning {}", app.library().root.display());
+    println!("Loaded {} songs", app.library().index.len());
 
     Ok(())
 }
