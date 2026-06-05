@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 use crate::{
-    library::{model::Library, scan::scan_library},
+    library::{
+        model::{Library, SongId},
+        scan::scan_library,
+    },
     system::settings::{Settings, default_library_dir},
 };
 
@@ -11,10 +14,33 @@ pub enum Screen {
     Library,
 }
 
+pub enum PlaybackStatus {
+    Stopped,
+}
+
+pub struct PlaybackState {
+    pub selected_song: Option<SongId>,
+    pub current_song: Option<SongId>,
+    pub status: PlaybackStatus,
+    pub volume: u8,
+}
+
+impl Default for PlaybackState {
+    fn default() -> Self {
+        Self {
+            selected_song: None,
+            current_song: None,
+            status: PlaybackStatus::Stopped,
+            volume: 100,
+        }
+    }
+}
+
 pub struct App {
     pub screen: Screen,
     pub library: Library,
     pub should_quit: bool,
+    pub playback: PlaybackState,
 }
 
 impl App {
@@ -29,8 +55,9 @@ impl App {
         let library = scan_library(&library_dir)?;
 
         Ok(Self {
-            screen: Screen::Library,
             library,
+            screen: Screen::Library,
+            playback: PlaybackState::default(),
             should_quit: false,
         })
     }
