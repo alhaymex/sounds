@@ -12,8 +12,9 @@ pub enum Screen {
 }
 
 pub struct App {
-    screen: Screen,
-    library: Library,
+    pub screen: Screen,
+    pub library: Library,
+    pub should_quit: bool,
 }
 
 impl App {
@@ -30,6 +31,7 @@ impl App {
         Ok(Self {
             screen: Screen::Library,
             library,
+            should_quit: false,
         })
     }
 

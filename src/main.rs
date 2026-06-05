@@ -1,5 +1,6 @@
 mod app;
 mod audio;
+mod event;
 mod library;
 mod system;
 mod tui;
@@ -10,9 +11,7 @@ use crate::app::App;
 
 fn main() -> Result<()> {
     let app = App::new()?;
-
-    println!("Scanning {}", app.library().root.display());
-    println!("Loaded {} songs", app.library().index.len());
+    tui::run(app)?;
 
     Ok(())
 }

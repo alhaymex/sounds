@@ -6,7 +6,7 @@ pub fn is_audio_file(path: &Path) -> bool {
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_ascii_lowercase())
             .as_deref(),
-        Some("mp3" | "flac" | "wav" | "ogg")
+        Some("mp3" | "flac" | "wav" | "ogg" | "webm")
     )
 }
 
@@ -35,6 +35,7 @@ mod tests {
         assert!(is_audio_file(Path::new("song.flac")));
         assert!(is_audio_file(Path::new("song.wav")));
         assert!(is_audio_file(Path::new("song.ogg")));
+        assert!(is_audio_file(Path::new("song.webm")));
     }
 
     #[test]

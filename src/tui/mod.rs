@@ -1,1 +1,58 @@
 pub mod player;
+
+use std::io;
+use std::time::Duration;
+
+use anyhow::Result;
+
+use crossterm::event::{self as ct_event, Event};
+use crossterm::execute;
+use crossterm::terminal::{
+    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
+    enable_raw_mode,
+};
+
+use ratatui::backend::CrosstermBackend;
+use ratatui::{Terminal, widgets::Paragraph};
+
+use crate::app::App;
+use crate::event;
+
+struct TerminalGuard;
+
+impl TerminalGuard {
+    fn enter() -> Result<Self> {
+        enable_raw_mode()?;
+        execute!(io::stdout(), EnterAlternateScreen)?;
+        Ok(Self)
+    }
+}
+
+impl Drop for TerminalGuard {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = execute!(io::stdout(), LeaveAlternateScreen);
+    }
+}
+
+pub fn run(mut app: App) -> Result<()> {
+    let _guard = TerminalGuard::enter()?;
+    let backend = CrosstermBackend::new(io::stdout());
+    let mut terminal = Terminal::new(backend)?;
+    terminal.clear()?;
+
+    while !app.should_quit {
+        terminal.draw(|frame| {
+            let text = Paragraph::new("Hello Ratatui!");
+            frame.render_widget(text, frame.area());
+        })?;
+
+        if ct_event::poll(Duration::from_millis(200))? {
+            if let Event::Key(key) = ct_event::read()? {
+                event::handle_key(key);
+            }
+        }
+    }
+
+    Ok(())
+}
