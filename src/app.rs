@@ -12,6 +12,7 @@ use crate::{
 
 pub enum Screen {
     Library,
+    Playlist { Path: PathBuf },
 }
 
 pub enum PlaybackStatus {
@@ -40,6 +41,8 @@ pub struct App {
     pub screen: Screen,
     pub library: Library,
     pub should_quit: bool,
+    pub selected_library: usize,
+    pub selected_playlist: usize,
     pub playback: PlaybackState,
 }
 
@@ -59,6 +62,8 @@ impl App {
             screen: Screen::Library,
             playback: PlaybackState::default(),
             should_quit: false,
+            selected_library: 0,
+            selected_playlist: 0,
         })
     }
 
