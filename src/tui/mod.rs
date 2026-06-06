@@ -1,4 +1,5 @@
 pub mod player;
+pub mod ui;
 
 use std::io;
 use std::time::Duration;
@@ -16,7 +17,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::{Terminal, widgets::Paragraph};
 
 use crate::app::App;
-use crate::event;
+use crate::{event, tui};
 
 struct TerminalGuard;
 
@@ -42,14 +43,11 @@ pub fn run(mut app: App) -> Result<()> {
     terminal.clear()?;
 
     while !app.should_quit {
-        terminal.draw(|frame| {
-            let text = Paragraph::new("Hello Ratatui!");
-            frame.render_widget(text, frame.area());
-        })?;
+        terminal.draw(|frame| ui::draw(frame, &mut app))?;
 
         if ct_event::poll(Duration::from_millis(200))? {
             if let Event::Key(key) = ct_event::read()? {
-                event::handle_key(key);
+                event::handle_key(key, &mut app);
             }
         }
     }

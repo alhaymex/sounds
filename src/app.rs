@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use anyhow::Result;
+
 use crate::{
     library::{
         model::{Library, SongId},
@@ -7,8 +9,6 @@ use crate::{
     },
     system::settings::{Settings, default_library_dir},
 };
-
-use anyhow::Result;
 
 pub enum Screen {
     Library,
@@ -81,5 +81,9 @@ impl App {
 
     pub fn screen(&self) -> &Screen {
         &self.screen
+    }
+
+    pub fn quit(&mut self) {
+        self.should_quit = true;
     }
 }
