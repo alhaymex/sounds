@@ -1,3 +1,4 @@
+pub mod library;
 pub mod player;
 pub mod theme;
 pub mod ui;
@@ -14,11 +15,11 @@ use crossterm::terminal::{
     enable_raw_mode,
 };
 
+use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
-use ratatui::{Terminal, widgets::Paragraph};
 
 use crate::app::App;
-use crate::{event, tui};
+use crate::event;
 
 struct TerminalGuard;
 
@@ -48,7 +49,7 @@ pub fn run(mut app: App) -> Result<()> {
 
         if ct_event::poll(Duration::from_millis(200))? {
             if let Event::Key(key) = ct_event::read()? {
-                event::handle_key(key, &mut app);
+                event::handle_key(key, &mut app)?;
             }
         }
     }

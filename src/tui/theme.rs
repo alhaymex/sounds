@@ -12,5 +12,5 @@ pub fn muted(text: impl Into<String>) -> Span<'static> {
 }
 
 pub fn gap() -> Span<'static> {
-    Span::raw("  ")
+    Span::raw("    ")
 }

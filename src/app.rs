@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use crate::{
     library::{
-        model::{Library, SongId},
+        model::{Library, Node, SongId},
         scan::scan_library,
     },
     system::settings::{Settings, default_library_dir},
@@ -12,7 +12,7 @@ use crate::{
 
 pub enum Screen {
     Library,
-    Playlist { Path: PathBuf },
+    Playlist { path: PathBuf },
 }
 
 pub enum PlaybackStatus {
@@ -35,6 +35,12 @@ impl Default for PlaybackState {
             volume: 100,
         }
     }
+}
+
+pub struct PlaylistRow {
+    pub name: String,
+    pub path: PathBuf,
+    pub song_count: usize,
 }
 
 pub struct App {
@@ -80,6 +86,27 @@ impl App {
         Ok(())
     }
 
+    pub fn playlist_rows(&self) -> Vec<PlaylistRow> {
+        let mut rows = Vec::new();
+
+        let Some(root) = self.library.tree.as_ref() else {
+            return rows;
+        };
+
+        match root {
+            Node::Dir { children, .. } => {
+                for child in children {
+                    if matches!(child, Node::Dir { .. }) {
+                        collect_playlist_rows(child, &mut rows);
+                    }
+                }
+            }
+            Node::Song { .. } => {}
+        };
+
+        rows
+    }
+
     pub fn library(&self) -> &Library {
         &self.library
     }
@@ -90,5 +117,32 @@ impl App {
 
     pub fn quit(&mut self) {
         self.should_quit = true;
+    }
+
+    pub fn move_down(&mut self) {}
+    pub fn move_up(&mut self) {}
+}
+
+fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
+    match node {
+        Node::Dir {
+            name,
+            path,
+            children,
+        } => {
+            rows.push(PlaylistRow {
+                name: name.clone(),
+                path: path.clone(),
+                song_count: 2,
+            });
+
+            for child in children {
+                if matches!(child, Node::Dir { .. }) {
+                    collect_playlist_rows(child, rows);
+                }
+            }
+        }
+
+        Node::Song { .. } => {}
     }
 }

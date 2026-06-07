@@ -1,13 +1,12 @@
 use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem},
+    text::Line,
+    widgets::ListItem,
 };
 
-use crate::tui::player::draw_player;
 use crate::tui::theme::{key_inline, muted};
+use crate::tui::{library::draw_library, player::draw_player};
 use crate::{
     app::App,
     library::model::{Node, SongRef},
@@ -21,6 +20,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     ])
     .areas(frame.area());
 
+    draw_library(frame, app, body);
     draw_player(frame, app, player);
     draw_footer(frame, app, footer);
 }
@@ -56,7 +56,7 @@ fn push_node_items(
     }
 }
 
-fn draw_footer(frame: &mut Frame, app: &mut App, layout: Rect) {
+fn draw_footer(frame: &mut Frame, _app: &mut App, layout: Rect) {
     let line = Line::from(vec![
         key_inline("[j/k]"),
         muted(" move  "),

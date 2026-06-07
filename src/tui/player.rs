@@ -23,7 +23,7 @@ fn draw_player_info(frame: &mut Frame, _app: &App, area: Rect) {
             .areas(area);
 
     let title = Line::from(vec![
-        Span::styled("▶ ", Style::default().fg(Color::Green)),
+        Span::styled("▶ ", Style::default().fg(Color::Gray)),
         Span::styled(
             "One Piece - The Very Very Very Strongest",
             Style::default().add_modifier(Modifier::BOLD),
