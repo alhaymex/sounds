@@ -87,23 +87,33 @@ fn draw_player(frame: &mut Frame, _app: &App, area: Rect) {
 
     frame.render_widget(title.centered(), title_area);
 
-    let max_width = 70;
+    let max_width = 80;
     let bar_width = bar_row.width.min(max_width);
+
     let x = bar_row.x + (bar_row.width.saturating_sub(bar_width)) / 2;
 
     let bar_area = Rect {
         x,
         y: bar_row.y,
         width: bar_width,
-        height: bar_row.height,
+        height: 1,
     };
 
-    let progress = seek_bar(93, 240, bar_area.width as usize);
+    let current = "1:33";
+    let total = "4:00";
+
+    // Space occupied by timestamps and surrounding spaces:
+    // "1:33 " + " 4:00"
+    let reserved_width = (current.len() + total.len() + 2) as u16;
+
+    let progress_width = bar_area.width.saturating_sub(reserved_width);
+
+    let progress = seek_bar(93, 240, progress_width as usize);
 
     let line = Line::from(vec![
-        Span::styled("1:33 ", Style::default().fg(Color::Gray)),
+        Span::styled(format!("{current} "), Style::default().fg(Color::Gray)),
         Span::raw(progress),
-        Span::styled(" 4:00", Style::default().fg(Color::Gray)),
+        Span::styled(format!(" {total}"), Style::default().fg(Color::Gray)),
     ]);
 
     frame.render_widget(line, bar_area);
