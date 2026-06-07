@@ -1,7 +1,8 @@
 use ratatui::{
     Frame,
-    style::{Modifier, Style},
-    text::Line,
+    layout::{Constraint, Layout, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
     widgets::{Block, Borders, List, ListItem},
 };
 
@@ -11,26 +12,15 @@ use crate::{
 };
 
 pub fn draw(frame: &mut Frame, app: &mut App) {
-    let items = match app.library.tree.as_ref() {
-        Some(root) => {
-            let mut items = Vec::new();
-            push_node_items(root, &app.library.index, 0, &mut items);
-            items
-        }
-        None => vec![ListItem::new(Line::from("None"))],
-    };
+    let [body, player, footer] = Layout::vertical([
+        Constraint::Fill(1),
+        Constraint::Length(3),
+        Constraint::Length(2),
+    ])
+    .areas(frame.area());
 
-    let title = format!(
-        "Library - {} songs - {}",
-        app.library.index.len(),
-        app.library.root.display()
-    );
-
-    let list = List::new(items)
-        .block(Block::default().title(title).borders(Borders::ALL))
-        .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
-
-    frame.render_widget(list, frame.area());
+    draw_player(frame, app, player);
+    draw_footer(frame, app, footer);
 }
 
 fn push_node_items(
@@ -62,4 +52,97 @@ fn push_node_items(
             items.push(ListItem::new(line));
         }
     }
+}
+
+fn draw_footer(frame: &mut Frame, app: &mut App, layout: Rect) {
+    let line = Line::from(vec![
+        key_inline("[j/k]"),
+        muted(" move  "),
+        key_inline("[⏎]"),
+        muted(" play  "),
+        key_inline("[h]"),
+        muted(" back  "),
+        key_inline("[f]"),
+        muted(" search  "),
+        key_inline("[y]"),
+        muted(" youtube  "),
+        key_inline("[?]"),
+        muted(" help  "),
+        key_inline("[q]"),
+        muted(" quit"),
+    ]);
+
+    frame.render_widget(line.centered(), layout);
+}
+
+fn draw_player(frame: &mut Frame, _app: &App, area: Rect) {
+    let [title_area, bar_row] =
+        Layout::vertical([Constraint::Length(1), Constraint::Length(1)])
+            .areas(area);
+
+    let title = Line::from(vec![
+        Span::styled("▶ ", Style::default().fg(Color::Green)),
+        Span::raw("One Piece - The Very Very Very Strongest"),
+    ]);
+
+    frame.render_widget(title.centered(), title_area);
+
+    let max_width = 70;
+    let bar_width = bar_row.width.min(max_width);
+    let x = bar_row.x + (bar_row.width.saturating_sub(bar_width)) / 2;
+
+    let bar_area = Rect {
+        x,
+        y: bar_row.y,
+        width: bar_width,
+        height: bar_row.height,
+    };
+
+    let progress = seek_bar(93, 240, bar_area.width as usize);
+
+    let line = Line::from(vec![
+        Span::styled("1:33 ", Style::default().fg(Color::Gray)),
+        Span::raw(progress),
+        Span::styled(" 4:00", Style::default().fg(Color::Gray)),
+    ]);
+
+    frame.render_widget(line, bar_area);
+}
+
+fn seek_bar(current: u64, total: u64, width: usize) -> String {
+    if width == 0 {
+        return String::new();
+    }
+
+    let pos = if total > 0 {
+        ((current as f64 / total as f64) * (width - 1) as f64) as usize
+    } else {
+        0
+    };
+
+    let mut s = String::with_capacity(width);
+
+    for i in 0..width {
+        if i < pos {
+            s.push('━');
+        } else if i == pos {
+            s.push('●');
+        } else {
+            s.push('─');
+        }
+    }
+
+    s
+}
+
+fn key_inline(text: impl Into<String>) -> Span<'static> {
+    Span::styled(text.into(), Style::default().fg(Color::LightBlue))
+}
+
+fn muted(text: impl Into<String>) -> Span<'static> {
+    Span::styled(text.into(), Style::default().fg(Color::DarkGray))
+}
+
+fn gap() -> Span<'static> {
+    Span::raw("  ")
 }
