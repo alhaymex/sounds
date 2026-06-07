@@ -11,10 +11,7 @@ use crate::app::App;
 
 fn main() -> Result<()> {
     let app = App::new()?;
-    let lib = app.library().clone();
     tui::run(app)?;
-
-    println!("{lib:?}");
 
     Ok(())
 }
