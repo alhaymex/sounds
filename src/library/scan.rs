@@ -47,6 +47,25 @@ pub fn scan_dir(dir: &Path, index: &mut Vec<SongRef>) -> io::Result<Node> {
     })
 }
 
+pub fn find_dir_by_path<'a>(node: &'a Node, target: &Path) -> Option<&'a Node> {
+    match node {
+        Node::Dir { children, path, .. } => {
+            if path == target {
+                return Some(node);
+            }
+
+            for child in children {
+                if let Some(found) = find_dir_by_path(child, target) {
+                    return Some(found);
+                }
+            }
+
+            None
+        }
+        Node::Song { .. } => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

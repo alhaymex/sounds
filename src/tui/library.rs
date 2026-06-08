@@ -1,9 +1,11 @@
+use std::path::PathBuf;
+
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Style},
-    text::Line,
-    widgets::{List, ListItem, ListState},
+    text::{Line, Text},
+    widgets::{Block, List, ListItem, ListState, Paragraph},
 };
 
 use crate::{
@@ -14,11 +16,11 @@ use crate::{
 pub fn draw_library(frame: &mut Frame, app: &mut App, area: Rect) {
     match &app.screen() {
         Screen::Library => draw_playlist_selector(frame, app, area),
-        Screen::Playlist { .. } => {}
+        Screen::Playlist { path } => draw_song_selector(frame, app, area, path),
     }
 }
 
-pub fn draw_playlist_selector(frame: &mut Frame, app: &App, area: Rect) {
+fn draw_playlist_selector(frame: &mut Frame, app: &App, area: Rect) {
     let area = center_area(area, CONTENT_MAX_WIDTH);
 
     let playlist_rows = app.playlist_rows();
@@ -36,6 +38,56 @@ pub fn draw_playlist_selector(frame: &mut Frame, app: &App, area: Rect) {
 
     if !playlist_rows.is_empty() {
         state.select(Some(app.selected_library));
+    }
+
+    frame.render_stateful_widget(list, area, &mut state);
+}
+
+fn draw_song_selector(
+    frame: &mut Frame,
+    app: &App,
+    area: Rect,
+    path: &std::path::Path,
+) {
+    let area = center_area(area, CONTENT_MAX_WIDTH);
+
+    let song_ids = app.current_playing_song_ids();
+
+    let items: Vec<ListItem> = song_ids
+        .iter()
+        .map(|song_id| {
+            let title = app
+                .library
+                .index
+                .get(*song_id)
+                .map(|song| song.title.as_str())
+                .unwrap_or("Unknown");
+
+            let is_current = app.playback.current_song == Some(*song_id);
+
+            // TODO: remove in favor of changing the "highlight_symbol"
+            // based on the current playing
+            let text = if is_current {
+                format!("|| {title}")
+            } else {
+                format!("♪ {title}")
+            };
+
+            ListItem::new(Line::from(text))
+        })
+        .collect();
+
+    let title = format!("Playlist - {}", path.display());
+
+    let list = List::new(items)
+        .block(Block::default().title(title))
+        .highlight_symbol("▶ ")
+        .highlight_style(Style::default().fg(Color::LightBlue));
+
+    let mut state = ListState::default();
+
+    if !song_ids.is_empty() {
+        state.select(Some(app.selected_playlist));
     }
 
     frame.render_stateful_widget(list, area, &mut state);

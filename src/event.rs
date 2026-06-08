@@ -15,6 +15,8 @@ pub fn handle_key(key: KeyEvent, app: &mut App) -> Result<()> {
         KeyCode::Char('q') => app.quit(),
         KeyCode::Down | KeyCode::Char('j') => app.move_down(),
         KeyCode::Up | KeyCode::Char('k') => app.move_up(),
+        KeyCode::Backspace | KeyCode::Esc => app.back(),
+        KeyCode::Enter => app.enter(),
         _ => {}
     }
 

@@ -5,7 +5,7 @@ use anyhow::Result;
 use crate::{
     library::{
         model::{Library, Node, SongId},
-        scan::scan_library,
+        scan::{find_dir_by_path, scan_library},
     },
     system::settings::{Settings, default_library_dir},
 };
@@ -73,6 +73,18 @@ impl App {
         })
     }
 
+    pub fn library(&self) -> &Library {
+        &self.library
+    }
+
+    pub fn screen(&self) -> &Screen {
+        &self.screen
+    }
+
+    pub fn quit(&mut self) {
+        self.should_quit = true;
+    }
+
     pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {
         let library = scan_library(&dir)?;
 
@@ -107,16 +119,22 @@ impl App {
         rows
     }
 
-    pub fn library(&self) -> &Library {
-        &self.library
-    }
+    pub fn current_playing_song_ids(&self) -> Vec<SongId> {
+        let Screen::Playlist { path } = &self.screen else {
+            return Vec::new();
+        };
 
-    pub fn screen(&self) -> &Screen {
-        &self.screen
-    }
+        let Some(root) = self.library.tree.as_ref() else {
+            return Vec::new();
+        };
 
-    pub fn quit(&mut self) {
-        self.should_quit = true;
+        let Some(node) = find_dir_by_path(root, path) else {
+            return Vec::new();
+        };
+
+        let mut songs = Vec::new();
+        collect_song_ids_recursive(node, &mut songs);
+        songs
     }
 
     pub fn move_down(&mut self) {
@@ -130,7 +148,16 @@ impl App {
 
                 self.selected_library = (self.selected_library + 1) % rows_len;
             }
-            Screen::Playlist { .. } => {}
+
+            Screen::Playlist { .. } => {
+                let row_len = self.current_playing_song_ids().len();
+
+                if row_len == 0 {
+                    return;
+                }
+
+                self.selected_playlist = (self.selected_playlist + 1) % row_len;
+            }
         }
     }
 
@@ -149,7 +176,49 @@ impl App {
                     self.selected_library -= 1;
                 }
             }
-            Screen::Playlist { .. } => {}
+
+            Screen::Playlist { .. } => {
+                let rows_len = self.current_playing_song_ids().len();
+
+                if rows_len == 0 {
+                    return;
+                }
+
+                if self.selected_playlist == 0 {
+                    self.selected_playlist = rows_len - 1;
+                } else {
+                    self.selected_playlist -= 1;
+                }
+            }
+        }
+    }
+
+    pub fn enter(&mut self) {
+        match self.screen {
+            Screen::Library => {
+                let rows = self.playlist_rows();
+
+                if let Some(row) = rows.get(self.selected_library) {
+                    self.screen = Screen::Playlist {
+                        path: row.path.clone(),
+                    };
+
+                    self.selected_playlist = 0;
+                }
+            }
+
+            Screen::Playlist { .. } => {
+                // Play selected song and go forward from there
+            }
+        }
+    }
+
+    pub fn back(&mut self) {
+        match self.screen {
+            Screen::Library => {}
+            Screen::Playlist { .. } => {
+                self.screen = Screen::Library;
+            }
         }
     }
 }
@@ -165,7 +234,7 @@ fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
                 name: name.clone(),
                 path: path.clone(),
                 // TODO: Count audio files
-                song_count: 2,
+                song_count: 0,
             });
 
             for child in children {
@@ -176,5 +245,18 @@ fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
         }
 
         Node::Song { .. } => {}
+    }
+}
+
+fn collect_song_ids_recursive(node: &Node, songs: &mut Vec<SongId>) {
+    match node {
+        Node::Dir { children, .. } => {
+            for child in children {
+                collect_song_ids_recursive(child, songs);
+            }
+        }
+        Node::Song { id } => {
+            songs.push(*id);
+        }
     }
 }
