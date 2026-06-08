@@ -13,7 +13,10 @@ use crate::{
 };
 
 pub fn draw(frame: &mut Frame, app: &mut App) {
-    let [body, player, footer] = Layout::vertical([
+    let top_margin = 3.min(frame.area().height / 4);
+
+    let [_, body, player, footer] = Layout::vertical([
+        Constraint::Length(top_margin),
         Constraint::Fill(1),
         Constraint::Length(3),
         Constraint::Length(2),

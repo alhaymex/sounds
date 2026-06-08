@@ -13,6 +13,8 @@ pub fn handle_key(key: KeyEvent, app: &mut App) -> Result<()> {
 
     match key.code {
         KeyCode::Char('q') => app.quit(),
+        KeyCode::Down | KeyCode::Char('j') => app.move_down(),
+        KeyCode::Up | KeyCode::Char('k') => app.move_up(),
         _ => {}
     }
 

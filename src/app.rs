@@ -119,8 +119,39 @@ impl App {
         self.should_quit = true;
     }
 
-    pub fn move_down(&mut self) {}
-    pub fn move_up(&mut self) {}
+    pub fn move_down(&mut self) {
+        match self.screen {
+            Screen::Library => {
+                let rows_len = self.playlist_rows().len();
+
+                if rows_len == 0 {
+                    return;
+                }
+
+                self.selected_library = (self.selected_library + 1) % rows_len;
+            }
+            Screen::Playlist { .. } => {}
+        }
+    }
+
+    pub fn move_up(&mut self) {
+        match self.screen {
+            Screen::Library => {
+                let rows_len = self.playlist_rows().len();
+
+                if rows_len == 0 {
+                    return;
+                }
+
+                if self.selected_library == 0 {
+                    self.selected_library = rows_len - 1;
+                } else {
+                    self.selected_library -= 1;
+                }
+            }
+            Screen::Playlist { .. } => {}
+        }
+    }
 }
 
 fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
@@ -133,6 +164,7 @@ fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
             rows.push(PlaylistRow {
                 name: name.clone(),
                 path: path.clone(),
+                // TODO: Count audio files
                 song_count: 2,
             });
 

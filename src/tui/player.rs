@@ -6,7 +6,7 @@ use ratatui::{
 };
 
 use crate::app::App;
-use crate::tui::theme::muted;
+use crate::tui::theme::{CONTENT_MAX_WIDTH, center_area, muted};
 
 pub fn draw_player(frame: &mut Frame, app: &App, area: Rect) {
     let [info_area, bar_area] =
@@ -44,25 +44,14 @@ fn draw_player_info(frame: &mut Frame, _app: &App, area: Rect) {
 }
 
 fn draw_progress_bar(frame: &mut Frame, _app: &App, area: Rect) {
-    let max_width = 80u16;
-
-    let bar_width = area.width.min(max_width);
-
-    let x = area.x + (area.width.saturating_sub(bar_width)) / 2;
-
-    let bar_area = Rect {
-        x,
-        y: area.y,
-        width: bar_width,
-        height: 1,
-    };
+    let area = center_area(area, CONTENT_MAX_WIDTH);
 
     let current = "1:33";
     let total = "4:00";
 
     let reserved = (current.len() + total.len() + 2) as u16;
 
-    let progress_width = bar_area.width.saturating_sub(reserved);
+    let progress_width = area.width.saturating_sub(reserved);
 
     let progress = seek_bar(93, 240, progress_width as usize);
 
@@ -72,7 +61,7 @@ fn draw_progress_bar(frame: &mut Frame, _app: &App, area: Rect) {
         Span::styled(format!(" {total}"), Style::default().fg(Color::Gray)),
     ]);
 
-    frame.render_widget(line, bar_area);
+    frame.render_widget(line, area);
 }
 
 fn seek_bar(current: u64, total: u64, width: usize) -> String {
