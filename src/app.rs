@@ -222,11 +222,15 @@ fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
             path,
             children,
         } => {
-            rows.push(PlaylistRow {
-                name: name.clone(),
-                path: path.clone(),
-                song_count: count_songs(node),
-            });
+            let song_count = count_songs(node);
+
+            if song_count > 0 {
+                rows.push(PlaylistRow {
+                    name: name.clone(),
+                    path: path.clone(),
+                    song_count: count_songs(node),
+                });
+            }
 
             for child in children {
                 if matches!(child, Node::Dir { .. }) {
