@@ -14,10 +14,6 @@ pub fn muted(text: impl Into<String>) -> Span<'static> {
     Span::styled(text.into(), Style::default().fg(Color::DarkGray))
 }
 
-pub fn gap() -> Span<'static> {
-    Span::raw("    ")
-}
-
 pub fn center_area(area: Rect, max_width: u16) -> Rect {
     let width = area.width.min(max_width);
 

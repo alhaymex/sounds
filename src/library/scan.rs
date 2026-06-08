@@ -72,6 +72,7 @@ mod tests {
     use crate::library::model::Node;
     use std::fs::{File, create_dir_all};
     use std::io;
+    use std::path::PathBuf;
     use tempfile::tempdir;
 
     #[test]
@@ -134,6 +135,72 @@ mod tests {
         let error = scan_library(&missing_dir).expect_err("scan should fail");
 
         assert_eq!(error.kind(), io::ErrorKind::NotFound);
+    }
+
+    #[test]
+    fn find_dir_by_path_finds_nested_directory() {
+        let root_path = PathBuf::from("/music");
+        let artist_path = root_path.join("Artist");
+        let album_path = artist_path.join("Album");
+
+        let tree = Node::Dir {
+            name: "Music".to_string(),
+            path: root_path,
+            children: vec![Node::Dir {
+                name: "Artist".to_string(),
+                path: artist_path,
+                children: vec![Node::Dir {
+                    name: "Album".to_string(),
+                    path: album_path.clone(),
+                    children: vec![Node::Song { id: 0 }],
+                }],
+            }],
+        };
+
+        let found = find_dir_by_path(&tree, &album_path)
+            .expect("expected to find nested album directory");
+
+        match found {
+            Node::Dir { name, path, .. } => {
+                assert_eq!(name, "Album");
+                assert_eq!(path, &album_path);
+            }
+            Node::Song { .. } => {
+                panic!("expected directory, found song");
+            }
+        }
+    }
+
+    #[test]
+    fn find_dir_by_path_returns_none_for_missing_directory() {
+        let root_path = PathBuf::from("/music");
+
+        let tree = Node::Dir {
+            name: "Music".to_string(),
+            path: root_path,
+            children: vec![Node::Dir {
+                name: "Artist".to_string(),
+                path: PathBuf::from("/music/Artist"),
+                children: vec![],
+            }],
+        };
+
+        let missing = PathBuf::from("/music/Missing");
+
+        assert!(find_dir_by_path(&tree, &missing).is_none());
+    }
+
+    #[test]
+    fn find_dir_by_path_does_not_match_songs() {
+        let song_path = PathBuf::from("/music/song.mp3");
+
+        let tree = Node::Dir {
+            name: "Music".to_string(),
+            path: PathBuf::from("/music"),
+            children: vec![Node::Song { id: 0 }],
+        };
+
+        assert!(find_dir_by_path(&tree, &song_path).is_none());
     }
 
     fn count_song_nodes(node: &Node) -> usize {

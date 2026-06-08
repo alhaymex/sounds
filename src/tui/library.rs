@@ -1,11 +1,9 @@
-use std::path::PathBuf;
-
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Style},
-    text::{Line, Text},
-    widgets::{Block, List, ListItem, ListState, Paragraph},
+    text::Line,
+    widgets::{Block, List, ListItem, ListState},
 };
 
 use crate::{
@@ -14,7 +12,7 @@ use crate::{
 };
 
 pub fn draw_library(frame: &mut Frame, app: &mut App, area: Rect) {
-    match &app.screen() {
+    match &app.screen {
         Screen::Library => draw_playlist_selector(frame, app, area),
         Screen::Playlist { path } => draw_song_selector(frame, app, area, path),
     }

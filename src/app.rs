@@ -73,14 +73,6 @@ impl App {
         })
     }
 
-    pub fn library(&self) -> &Library {
-        &self.library
-    }
-
-    pub fn screen(&self) -> &Screen {
-        &self.screen
-    }
-
     pub fn quit(&mut self) {
         self.should_quit = true;
     }
@@ -133,7 +125,7 @@ impl App {
         };
 
         let mut songs = Vec::new();
-        collect_song_ids_recursive(node, &mut songs);
+        collect_songs(node, &mut songs);
         songs
     }
 
@@ -233,8 +225,7 @@ fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
             rows.push(PlaylistRow {
                 name: name.clone(),
                 path: path.clone(),
-                // TODO: Count audio files
-                song_count: 0,
+                song_count: count_songs(node),
             });
 
             for child in children {
@@ -248,15 +239,22 @@ fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
     }
 }
 
-fn collect_song_ids_recursive(node: &Node, songs: &mut Vec<SongId>) {
+fn collect_songs(node: &Node, songs: &mut Vec<SongId>) {
     match node {
         Node::Dir { children, .. } => {
             for child in children {
-                collect_song_ids_recursive(child, songs);
+                collect_songs(child, songs);
             }
         }
         Node::Song { id } => {
             songs.push(*id);
         }
+    }
+}
+
+fn count_songs(node: &Node) -> usize {
+    match node {
+        Node::Dir { children, .. } => children.iter().map(count_songs).sum(),
+        Node::Song { .. } => 1,
     }
 }
