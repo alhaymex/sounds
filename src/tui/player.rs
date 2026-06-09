@@ -63,18 +63,10 @@ fn draw_player_info(frame: &mut Frame, app: &App, area: Rect) {
 
         let album = song.metadata.album.as_deref().unwrap_or("Unknown Album");
 
-        let track = song
-            .metadata
-            .track
-            .map(|track| track.to_string())
-            .unwrap_or_else(|| "--".to_string());
-
         Line::from(vec![
             muted(artist),
             muted(" • "),
             muted(album),
-            muted(" • "),
-            muted(format!("Track {track}")),
             muted(" • "),
             muted(format!("Volume {}%", app.playback.volume)),
         ])
@@ -113,7 +105,7 @@ fn draw_progress_bar(frame: &mut Frame, app: &App, area: Rect) {
 
     let line = Line::from(vec![
         Span::styled(format!("{current} "), Style::default().fg(Color::Gray)),
-        Span::raw(progress),
+        Span::raw(progress).style(Style::default().fg(Color::White)),
         Span::styled(format!(" {total}"), Style::default().fg(Color::Gray)),
     ]);
 

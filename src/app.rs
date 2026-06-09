@@ -16,6 +16,8 @@ use crate::{
 pub enum Screen {
     Library,
     Playlist { path: PathBuf },
+    Help,
+    Settings,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -118,6 +120,9 @@ impl App {
                     self.selected_playlist -= 1;
                 }
             }
+
+            Screen::Settings => {}
+            Screen::Help => {}
         }
     }
 
@@ -142,6 +147,9 @@ impl App {
 
                 self.selected_playlist = (self.selected_playlist + 1) % row_len;
             }
+
+            Screen::Settings => {}
+            Screen::Help => {}
         }
     }
 
@@ -159,9 +167,10 @@ impl App {
                 }
             }
 
-            Screen::Playlist { .. } => {
-                // Play selected song and go forward from there
-            }
+            Screen::Playlist { .. } => {}
+
+            Screen::Settings => {}
+            Screen::Help => {}
         }
     }
 
@@ -171,6 +180,9 @@ impl App {
             Screen::Playlist { .. } => {
                 self.screen = Screen::Library;
             }
+
+            Screen::Settings => {}
+            Screen::Help => {}
         }
     }
 

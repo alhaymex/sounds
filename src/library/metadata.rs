@@ -13,7 +13,6 @@ pub fn read_metadata(path: &Path) -> Metadata {
         .or_else(|| tagged_file.first_tag());
 
     let mut metadata = Metadata {
-        duration: Some(tagged_file.properties().duration()),
         ..Metadata::default()
     };
 
@@ -21,8 +20,6 @@ pub fn read_metadata(path: &Path) -> Metadata {
         metadata.title = tag.title().map(|value| value.into_owned());
         metadata.artist = tag.artist().map(|value| value.into_owned());
         metadata.album = tag.album().map(|value| value.into_owned());
-        metadata.genre = tag.genre().map(|value| value.into_owned());
-        metadata.track = tag.track();
     }
 
     metadata

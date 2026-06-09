@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::path::PathBuf;
 
 pub type SongId = usize;
 
@@ -31,9 +31,6 @@ pub struct Metadata {
     pub title: Option<String>,
     pub artist: Option<String>,
     pub album: Option<String>,
-    pub genre: Option<String>,
-    pub track: Option<u32>,
-    pub duration: Option<Duration>,
 }
 
 #[derive(Debug, Clone, Default)]

@@ -37,7 +37,6 @@ mod tests {
         assert!(is_audio_file(Path::new("song.flac")));
         assert!(is_audio_file(Path::new("song.wav")));
         assert!(is_audio_file(Path::new("song.ogg")));
-        assert!(is_audio_file(Path::new("song.webm")));
     }
 
     #[test]

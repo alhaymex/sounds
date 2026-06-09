@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{Context, Ok, Result};
+use anyhow::{Context, Result};
 use rodio::{Decoder, DeviceSinkBuilder, MixerDeviceSink, Player, Source};
 
 pub struct AudioPlayer {
@@ -12,6 +12,7 @@ pub struct AudioPlayer {
     player: Player,
     current_path: Option<PathBuf>,
     current_duration: Option<Duration>,
+    volume: u8,
 }
 
 impl AudioPlayer {
@@ -26,13 +27,17 @@ impl AudioPlayer {
             player,
             current_path: None,
             current_duration: None,
+            volume: 100,
         })
     }
 
     pub fn play(&mut self, path: impl AsRef<Path>) -> Result<()> {
         let path = path.as_ref();
 
-        self.stop();
+        // Stop current song, but keep the same Player/audio device alive.
+        self.player.stop();
+        self.current_path = None;
+        self.current_duration = None;
 
         let file = File::open(path).with_context(|| {
             format!("failed to open audio file {}", path.display())
@@ -45,6 +50,10 @@ impl AudioPlayer {
         self.current_duration = source.total_duration();
 
         self.player.append(source);
+
+        // Re-apply persisted volume before playing.
+        self.player.set_volume(self.volume_as_f32());
+
         self.player.play();
 
         self.current_path = Some(path.to_path_buf());
@@ -55,15 +64,12 @@ impl AudioPlayer {
     pub fn stop(&mut self) {
         self.player.stop();
         self.current_duration = None;
-
-        // Create a new player after stopping so the next song starts cleanly
-        self.player = Player::connect_new(&self.sink.mixer());
         self.current_path = None;
     }
 
     pub fn toggle_pause(&mut self) {
         if self.player.is_paused() {
-            self.player.play()
+            self.player.play();
         } else {
             self.player.pause();
         }
@@ -107,12 +113,20 @@ impl AudioPlayer {
         Ok(())
     }
 
-    pub fn set_volume(&self, volume: u8) {
-        let volume = volume.min(100) as f32 / 100.0;
-        self.player.set_volume(volume);
+    pub fn set_volume(&mut self, volume: u8) {
+        self.volume = volume.min(100);
+        self.player.set_volume(self.volume_as_f32());
     }
 
     pub fn volume(&self) -> u8 {
-        (self.player.volume() * 100.0).round() as u8
+        self.volume
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.current_path.is_some() && self.player.empty()
+    }
+
+    fn volume_as_f32(&self) -> f32 {
+        self.volume as f32 / 100.0
     }
 }

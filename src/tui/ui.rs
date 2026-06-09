@@ -32,7 +32,7 @@ fn draw_footer(frame: &mut Frame, _app: &mut App, layout: Rect) {
         muted(" move  "),
         key_inline("[⏎]"),
         muted(" play  "),
-        key_inline("[h]"),
+        key_inline("[esc]"),
         muted(" back  "),
         key_inline("[f]"),
         muted(" search  "),
