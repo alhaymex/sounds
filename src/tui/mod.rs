@@ -1,3 +1,4 @@
+pub mod help;
 pub mod library;
 pub mod options;
 pub mod player;

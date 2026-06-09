@@ -5,7 +5,8 @@ use ratatui::{
 };
 
 use crate::tui::{
-    library::draw_library, options::draw_options_screen, player::draw_player,
+    help::draw_help_screen, library::draw_library,
+    options::draw_options_screen, player::draw_player,
 };
 use crate::{app::App, tui::theme::draw_rain_background};
 use crate::{
@@ -36,10 +37,8 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
             }
             draw_library(frame, app, body);
         }
-        Screen::Options => {
-            draw_options_screen(frame, app, body);
-        }
-        Screen::Help => {}
+        Screen::Options => draw_options_screen(frame, app, body),
+        Screen::Help => draw_help_screen(frame, app, body),
     }
     draw_player(frame, app, player);
     draw_footer(frame, app, footer);

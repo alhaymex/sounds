@@ -118,11 +118,11 @@ impl AudioPlayer {
         self.player.set_volume(self.volume_as_f32());
     }
 
-    pub fn volume(&self) -> u8 {
+    pub fn _volume(&self) -> u8 {
         self.volume
     }
 
-    pub fn is_finished(&self) -> bool {
+    pub fn _is_finished(&self) -> bool {
         self.current_path.is_some() && self.player.empty()
     }
 

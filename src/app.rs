@@ -18,8 +18,8 @@ use crate::{
 pub enum Screen {
     Library,
     Playlist { path: PathBuf },
-    Help,
     Options,
+    Help,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -137,8 +137,7 @@ impl App {
                 }
             }
 
-            Screen::Options => {}
-            Screen::Help => {}
+            _ => {}
         }
     }
 
@@ -204,7 +203,14 @@ impl App {
                     self.screen = Screen::Library;
                 }
             }
-            Screen::Help => {}
+
+            Screen::Help => {
+                if let Some(prev) = self.prev_screen.take() {
+                    self.screen = prev;
+                } else {
+                    self.screen = Screen::Library;
+                }
+            }
         }
     }
 
@@ -359,6 +365,15 @@ impl App {
         settings.save()?;
 
         Ok(())
+    }
+
+    pub fn toggle_help(&mut self) {
+        if self.screen == Screen::Help {
+            self.screen = self.prev_screen.take().unwrap_or(Screen::Library);
+        } else {
+            self.prev_screen = Some(self.screen.clone());
+            self.screen = Screen::Help;
+        }
     }
 }
 

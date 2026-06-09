@@ -1,12 +1,16 @@
 use ratatui::{
     Frame,
     layout::Rect,
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::Paragraph,
 };
 
 pub const CONTENT_MAX_WIDTH: u16 = 80;
+
+pub fn title(text: &'static str) -> Span<'static> {
+    Span::styled(text, Style::default().add_modifier(Modifier::BOLD))
+}
 
 pub fn key_inline(text: impl Into<String>) -> Span<'static> {
     Span::styled(text.into(), Style::default().fg(Color::LightBlue))
