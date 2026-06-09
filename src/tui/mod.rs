@@ -48,6 +48,11 @@ pub fn run(mut app: App) -> Result<()> {
     terminal.clear()?;
 
     while !app.should_quit {
+        app.sync_playback_time(
+            audio_player.position(),
+            audio_player.duration(),
+        );
+
         terminal.draw(|frame| ui::draw(frame, &mut app))?;
 
         if ct_event::poll(Duration::from_millis(200))? {

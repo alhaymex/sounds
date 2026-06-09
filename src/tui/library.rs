@@ -75,7 +75,12 @@ fn draw_song_selector(
         })
         .collect();
 
-    let title = format!("Playlist - {}", path.display());
+    let title = format!(
+        "Playlist - {}",
+        path.file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("Unknown")
+    );
 
     let list = List::new(items)
         .block(Block::default().title(title))

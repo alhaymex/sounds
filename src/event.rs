@@ -31,6 +31,10 @@ pub fn handle_key(
                 if let Some(path) = app.selected_song_path() {
                     audio_player.play(path)?;
                     app.mark_selected_song_playing();
+                    app.sync_playback_time(
+                        audio_player.position(),
+                        audio_player.duration(),
+                    );
                 }
             }
         }
@@ -41,10 +45,31 @@ pub fn handle_key(
                 app.toggle_pause();
             }
         }
-
         KeyCode::Char('s') => {
             audio_player.stop();
             app.stop_playback();
+        }
+        KeyCode::Right | KeyCode::Char('l') => {
+            audio_player.seek_forward()?;
+            app.sync_playback_time(
+                audio_player.position(),
+                audio_player.duration(),
+            );
+        }
+        KeyCode::Left | KeyCode::Char('h') => {
+            audio_player.seek_backward()?;
+            app.sync_playback_time(
+                audio_player.position(),
+                audio_player.duration(),
+            );
+        }
+        KeyCode::Char('+') => {
+            let volume = app.volume_up();
+            audio_player.set_volume(volume);
+        }
+        KeyCode::Char('-') => {
+            let volume = app.volume_down();
+            audio_player.set_volume(volume)
         }
 
         _ => {}

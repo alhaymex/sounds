@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
@@ -62,17 +64,27 @@ fn draw_player_info(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(metadata.centered(), meta_area);
 }
 
-fn draw_progress_bar(frame: &mut Frame, _app: &App, area: Rect) {
+fn draw_progress_bar(frame: &mut Frame, app: &App, area: Rect) {
     let area = center_area(area, CONTENT_MAX_WIDTH);
 
-    let current = "1:33";
-    let total = "4:00";
+    let position = app.playback.position;
+    let duration = app.playback.duration.unwrap_or(Duration::ZERO);
+
+    let current = format_duration(position);
+    let total = if duration.is_zero() {
+        "--:--".to_string()
+    } else {
+        format_duration(duration)
+    };
 
     let reserved = (current.len() + total.len() + 2) as u16;
-
     let progress_width = area.width.saturating_sub(reserved);
 
-    let progress = seek_bar(93, 240, progress_width as usize);
+    let progress = seek_bar(
+        position.as_secs(),
+        duration.as_secs(),
+        progress_width as usize,
+    );
 
     let line = Line::from(vec![
         Span::styled(format!("{current} "), Style::default().fg(Color::Gray)),
@@ -107,4 +119,12 @@ fn seek_bar(current: u64, total: u64, width: usize) -> String {
     }
 
     s
+}
+
+fn format_duration(duration: Duration) -> String {
+    let total_secs = duration.as_secs();
+    let minutes = total_secs / 60;
+    let seconds = total_secs % 60;
+
+    format!("{minutes}:{seconds:02}")
 }

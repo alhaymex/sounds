@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use anyhow::Result;
 
@@ -27,6 +30,8 @@ pub struct PlaybackState {
     pub current_song: Option<SongId>,
     pub status: PlaybackStatus,
     pub volume: u8,
+    pub position: Duration,
+    pub duration: Option<Duration>,
 }
 
 impl Default for PlaybackState {
@@ -36,6 +41,8 @@ impl Default for PlaybackState {
             current_song: None,
             status: PlaybackStatus::Stopped,
             volume: 100,
+            position: Duration::ZERO,
+            duration: None,
         }
     }
 }
@@ -227,9 +234,20 @@ impl App {
         }
     }
 
+    pub fn sync_playback_time(
+        &mut self,
+        position: Duration,
+        duration: Option<Duration>,
+    ) {
+        self.playback.position = position;
+        self.playback.duration = duration;
+    }
+
     pub fn stop_playback(&mut self) {
         self.playback.current_song = None;
         self.playback.status = PlaybackStatus::Stopped;
+        self.playback.position = Duration::ZERO;
+        self.playback.duration = None;
     }
 
     pub fn toggle_pause(&mut self) {
@@ -238,6 +256,22 @@ impl App {
             PlaybackStatus::Paused => PlaybackStatus::Playing,
             PlaybackStatus::Stopped => PlaybackStatus::Stopped,
         }
+    }
+
+    pub fn set_volume(&mut self, volume: u8) {
+        self.playback.volume = volume.min(100);
+    }
+
+    pub fn volume_up(&mut self) -> u8 {
+        let volume = self.playback.volume.saturating_add(5).min(100);
+        self.set_volume(volume);
+        volume
+    }
+
+    pub fn volume_down(&mut self) -> u8 {
+        let volume = self.playback.volume.saturating_sub(5);
+        self.set_volume(volume);
+        volume
     }
 
     pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {
