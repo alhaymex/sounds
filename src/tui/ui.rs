@@ -4,9 +4,9 @@ use ratatui::{
     text::Line,
 };
 
-use crate::app::App;
 use crate::tui::theme::{key_inline, muted};
 use crate::tui::{library::draw_library, player::draw_player};
+use crate::{app::App, tui::theme::draw_rain_background};
 
 pub fn draw(frame: &mut Frame, app: &mut App) {
     let top_margin = 3.min(frame.area().height / 4);
@@ -18,6 +18,8 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         Constraint::Length(2),
     ])
     .areas(frame.area());
+
+    draw_rain_background(frame, frame.area(), app.playback.volume, app.tick);
 
     draw_library(frame, app, body);
     draw_player(frame, app, player);

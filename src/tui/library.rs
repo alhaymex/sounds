@@ -30,7 +30,8 @@ fn draw_playlist_selector(frame: &mut Frame, app: &App, area: Rect) {
 
     let list = List::new(items)
         .highlight_symbol("▶ ")
-        .highlight_style(Style::default().fg(Color::LightBlue));
+        .highlight_style(Style::default().fg(Color::LightBlue))
+        .style(Style::default().fg(Color::White));
 
     let mut state = ListState::default();
 
@@ -63,8 +64,6 @@ fn draw_song_selector(
 
             let is_current = app.playback.current_song == Some(*song_id);
 
-            // TODO: remove in favor of changing the "highlight_symbol"
-            // based on the current playing
             let item = ListItem::new(Line::from(format!("♪ {title}")));
 
             if is_current {
@@ -85,7 +84,8 @@ fn draw_song_selector(
     let list = List::new(items)
         .block(Block::default().title(title))
         .highlight_symbol("▶ ")
-        .highlight_style(Style::default().fg(Color::LightBlue));
+        .highlight_style(Style::default().fg(Color::LightBlue))
+        .style(Style::default().fg(Color::White));
 
     let mut state = ListState::default();
 

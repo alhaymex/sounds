@@ -1,8 +1,10 @@
 use std::fs;
 use std::{io, path::Path};
 
-use super::model::{Library, Node, SongRef};
-
+use super::{
+    metadata::read_metadata,
+    model::{Library, Node, SongRef},
+};
 use crate::system::fs::{dir_name, is_audio_file, song_title_from_path};
 
 pub fn scan_library(root: impl AsRef<Path>) -> io::Result<Library> {
@@ -28,12 +30,18 @@ pub fn scan_dir(dir: &Path, index: &mut Vec<SongRef>) -> io::Result<Node> {
             children.push(scan_dir(&path, index)?);
         } else if is_audio_file(&path) {
             let id = index.len();
-            let title = song_title_from_path(&path);
+
+            let metadata = read_metadata(&path);
+            let title = metadata
+                .title
+                .clone()
+                .unwrap_or_else(|| song_title_from_path(&path));
 
             index.push(SongRef {
                 id,
                 path: path.clone(),
                 title,
+                metadata,
             });
 
             children.push(Node::Song { id });

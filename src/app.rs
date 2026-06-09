@@ -60,6 +60,7 @@ pub struct App {
     pub selected_library: usize,
     pub selected_playlist: usize,
     pub playback: PlaybackState,
+    pub tick: u64,
 }
 
 impl App {
@@ -80,6 +81,7 @@ impl App {
             should_quit: false,
             selected_library: 0,
             selected_playlist: 0,
+            tick: 0,
         })
     }
 

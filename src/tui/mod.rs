@@ -48,6 +48,8 @@ pub fn run(mut app: App) -> Result<()> {
     terminal.clear()?;
 
     while !app.should_quit {
+        app.tick = app.tick.wrapping_add(1);
+
         app.sync_playback_time(
             audio_player.position(),
             audio_player.duration(),

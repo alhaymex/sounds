@@ -24,10 +24,12 @@ fn draw_player_info(frame: &mut Frame, app: &App, area: Rect) {
         Layout::vertical([Constraint::Length(1), Constraint::Length(1)])
             .areas(area);
 
-    let current_song_title = app
+    let current_song = app
         .playback
         .current_song
-        .and_then(|song_id| app.library.index.get(song_id))
+        .and_then(|song_id| app.library.index.get(song_id));
+
+    let title_text = current_song
         .map(|song| song.title.as_str())
         .unwrap_or("No song playing");
 
@@ -46,20 +48,43 @@ fn draw_player_info(frame: &mut Frame, app: &App, area: Rect) {
     let title = Line::from(vec![
         Span::styled(icon, Style::default().fg(icon_color)),
         Span::styled(
-            current_song_title,
-            Style::default().add_modifier(Modifier::BOLD),
+            title_text,
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
         ),
     ]);
 
     frame.render_widget(title.centered(), title_area);
 
-    let metadata = Line::from(vec![
-        muted("Hiroshi Kitadani"),
-        muted(" • "),
-        muted("One Piece OST"),
-        muted(" • "),
-        muted("03/24"),
-    ]);
+    let metadata = if let Some(song) = current_song {
+        let artist =
+            song.metadata.artist.as_deref().unwrap_or("Unknown Artist");
+
+        let album = song.metadata.album.as_deref().unwrap_or("Unknown Album");
+
+        let track = song
+            .metadata
+            .track
+            .map(|track| track.to_string())
+            .unwrap_or_else(|| "--".to_string());
+
+        Line::from(vec![
+            muted(artist),
+            muted(" • "),
+            muted(album),
+            muted(" • "),
+            muted(format!("Track {track}")),
+            muted(" • "),
+            muted(format!("Volume {}%", app.playback.volume)),
+        ])
+    } else {
+        Line::from(vec![
+            muted("No metadata"),
+            muted(" • "),
+            muted(format!("Volume {}%", app.playback.volume)),
+        ])
+    };
 
     frame.render_widget(metadata.centered(), meta_area);
 }
