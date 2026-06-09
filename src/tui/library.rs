@@ -66,7 +66,7 @@ fn draw_song_selector(
             // TODO: remove in favor of changing the "highlight_symbol"
             // based on the current playing
             let text = if is_current {
-                format!("|| {title}")
+                format!("♪ {title}")
             } else {
                 format!("♪ {title}")
             };

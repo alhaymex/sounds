@@ -1,12 +1,14 @@
 use std::path::Path;
 
+// NOTE: webm files are not supported for now
+
 pub fn is_audio_file(path: &Path) -> bool {
     matches!(
         path.extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_ascii_lowercase())
             .as_deref(),
-        Some("mp3" | "flac" | "wav" | "ogg" | "webm")
+        Some("mp3" | "flac" | "wav" | "ogg")
     )
 }
 

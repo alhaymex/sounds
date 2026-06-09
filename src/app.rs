@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
@@ -17,6 +17,8 @@ pub enum Screen {
 
 pub enum PlaybackStatus {
     Stopped,
+    Playing,
+    Paused,
 }
 
 pub struct PlaybackState {
@@ -77,17 +79,89 @@ impl App {
         self.should_quit = true;
     }
 
-    pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {
-        let library = scan_library(&dir)?;
+    pub fn move_up(&mut self) {
+        match self.screen {
+            Screen::Library => {
+                let rows_len = self.playlist_rows().len();
 
-        self.library = library;
+                if rows_len == 0 {
+                    return;
+                }
 
-        Settings {
-            library_dir: Some(dir),
+                if self.selected_library == 0 {
+                    self.selected_library = rows_len - 1;
+                } else {
+                    self.selected_library -= 1;
+                }
+            }
+
+            Screen::Playlist { .. } => {
+                let rows_len = self.current_playing_song_ids().len();
+
+                if rows_len == 0 {
+                    return;
+                }
+
+                if self.selected_playlist == 0 {
+                    self.selected_playlist = rows_len - 1;
+                } else {
+                    self.selected_playlist -= 1;
+                }
+            }
         }
-        .save()?;
+    }
 
-        Ok(())
+    pub fn move_down(&mut self) {
+        match self.screen {
+            Screen::Library => {
+                let rows_len = self.playlist_rows().len();
+
+                if rows_len == 0 {
+                    return;
+                }
+
+                self.selected_library = (self.selected_library + 1) % rows_len;
+            }
+
+            Screen::Playlist { .. } => {
+                let row_len = self.current_playing_song_ids().len();
+
+                if row_len == 0 {
+                    return;
+                }
+
+                self.selected_playlist = (self.selected_playlist + 1) % row_len;
+            }
+        }
+    }
+
+    pub fn enter(&mut self) {
+        match self.screen {
+            Screen::Library => {
+                let rows = self.playlist_rows();
+
+                if let Some(row) = rows.get(self.selected_library) {
+                    self.screen = Screen::Playlist {
+                        path: row.path.clone(),
+                    };
+
+                    self.selected_playlist = 0;
+                }
+            }
+
+            Screen::Playlist { .. } => {
+                // Play selected song and go forward from there
+            }
+        }
+    }
+
+    pub fn back(&mut self) {
+        match self.screen {
+            Screen::Library => {}
+            Screen::Playlist { .. } => {
+                self.screen = Screen::Library;
+            }
+        }
     }
 
     pub fn playlist_rows(&self) -> Vec<PlaylistRow> {
@@ -129,89 +203,45 @@ impl App {
         songs
     }
 
-    pub fn move_down(&mut self) {
-        match self.screen {
-            Screen::Library => {
-                let rows_len = self.playlist_rows().len();
+    pub fn selected_song_id(&self) -> Option<SongId> {
+        let song_ids = self.current_playing_song_ids();
 
-                if rows_len == 0 {
-                    return;
-                }
+        song_ids.get(self.selected_playlist).copied()
+    }
 
-                self.selected_library = (self.selected_library + 1) % rows_len;
-            }
+    pub fn selected_song_path(&self) -> Option<&std::path::Path> {
+        let song_id = self.selected_song_id()?;
 
-            Screen::Playlist { .. } => {
-                let row_len = self.current_playing_song_ids().len();
+        self.library
+            .index
+            .get(song_id)
+            .map(|song| song.path.as_path())
+    }
 
-                if row_len == 0 {
-                    return;
-                }
-
-                self.selected_playlist = (self.selected_playlist + 1) % row_len;
-            }
+    pub fn mark_selected_song_playing(&mut self) {
+        if let Some(song_id) = self.selected_song_id() {
+            self.playback.selected_song = Some(song_id);
+            self.playback.current_song = Some(song_id);
+            self.playback.status = PlaybackStatus::Playing;
         }
     }
 
-    pub fn move_up(&mut self) {
-        match self.screen {
-            Screen::Library => {
-                let rows_len = self.playlist_rows().len();
-
-                if rows_len == 0 {
-                    return;
-                }
-
-                if self.selected_library == 0 {
-                    self.selected_library = rows_len - 1;
-                } else {
-                    self.selected_library -= 1;
-                }
-            }
-
-            Screen::Playlist { .. } => {
-                let rows_len = self.current_playing_song_ids().len();
-
-                if rows_len == 0 {
-                    return;
-                }
-
-                if self.selected_playlist == 0 {
-                    self.selected_playlist = rows_len - 1;
-                } else {
-                    self.selected_playlist -= 1;
-                }
-            }
-        }
+    pub fn stop_playback(&mut self) {
+        self.playback.current_song = None;
+        self.playback.status = PlaybackStatus::Stopped;
     }
 
-    pub fn enter(&mut self) {
-        match self.screen {
-            Screen::Library => {
-                let rows = self.playlist_rows();
+    pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {
+        let library = scan_library(&dir)?;
 
-                if let Some(row) = rows.get(self.selected_library) {
-                    self.screen = Screen::Playlist {
-                        path: row.path.clone(),
-                    };
+        self.library = library;
 
-                    self.selected_playlist = 0;
-                }
-            }
-
-            Screen::Playlist { .. } => {
-                // Play selected song and go forward from there
-            }
+        Settings {
+            library_dir: Some(dir),
         }
-    }
+        .save()?;
 
-    pub fn back(&mut self) {
-        match self.screen {
-            Screen::Library => {}
-            Screen::Playlist { .. } => {
-                self.screen = Screen::Library;
-            }
-        }
+        Ok(())
     }
 }
 

@@ -19,6 +19,7 @@ use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 
 use crate::app::App;
+use crate::audio::player::AudioPlayer;
 use crate::event;
 
 struct TerminalGuard;
@@ -42,6 +43,8 @@ pub fn run(mut app: App) -> Result<()> {
     let _guard = TerminalGuard::enter()?;
     let backend = CrosstermBackend::new(io::stdout());
     let mut terminal = Terminal::new(backend)?;
+    let mut audio_player = AudioPlayer::new()?;
+
     terminal.clear()?;
 
     while !app.should_quit {
@@ -49,10 +52,12 @@ pub fn run(mut app: App) -> Result<()> {
 
         if ct_event::poll(Duration::from_millis(200))? {
             if let Event::Key(key) = ct_event::read()? {
-                event::handle_key(key, &mut app)?;
+                event::handle_key(key, &mut app, &mut audio_player)?;
             }
         }
     }
+
+    audio_player.stop();
 
     Ok(())
 }
