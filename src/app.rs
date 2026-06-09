@@ -5,6 +5,7 @@ use std::{
 
 use anyhow::Result;
 
+use crate::state::options::{OptionsItem, OptionsState};
 use crate::{
     library::{
         model::{Library, Node, SongId},
@@ -70,6 +71,7 @@ pub struct App {
     pub playback: PlaybackState,
     pub tick: u64,
     pub config: Config,
+    pub options: OptionsState,
 }
 
 impl App {
@@ -92,6 +94,7 @@ impl App {
             selected_library: 0,
             selected_playlist: 0,
             tick: 0,
+            options: { OptionsState::default() },
             config: {
                 Config {
                     rain_enabled: settings.rain_enabled,
@@ -314,6 +317,35 @@ impl App {
 
         self.prev_screen = Some(self.screen.clone());
         self.screen = Screen::Options;
+    }
+
+    pub fn options_down(&mut self) {
+        self.options.move_down();
+    }
+
+    pub fn options_up(&mut self) {
+        self.options.move_up();
+    }
+
+    pub fn activate_selected_option(&mut self) -> Result<()> {
+        match self.options.selected_item() {
+            OptionsItem::LibraryPath => {
+                // edit library path
+                Ok(())
+            }
+
+            OptionsItem::RainEnabled => self.toggle_rain(),
+        }
+    }
+
+    pub fn toggle_rain(&mut self) -> Result<()> {
+        self.config.rain_enabled = !self.config.rain_enabled;
+
+        let mut settings = Settings::load()?;
+        settings.rain_enabled = self.config.rain_enabled;
+        settings.save()?;
+
+        Ok(())
     }
 
     pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {

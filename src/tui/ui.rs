@@ -35,15 +35,14 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
                 );
             }
             draw_library(frame, app, body);
-            draw_player(frame, app, player);
-            draw_footer(frame, app, footer);
         }
         Screen::Options => {
             draw_options_screen(frame, app, body);
         }
         Screen::Help => {}
-        _ => {}
     }
+    draw_player(frame, app, player);
+    draw_footer(frame, app, footer);
 }
 
 fn draw_footer(frame: &mut Frame, _app: &mut App, layout: Rect) {

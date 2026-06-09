@@ -6,3 +6,4 @@
 - [ ] help screen
 - [ ] search
 - [ ] youtube integration via yt-dlp
+- [ ] clean up

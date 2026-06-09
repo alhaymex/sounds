@@ -2,6 +2,7 @@ mod app;
 mod audio;
 mod event;
 mod library;
+mod state;
 mod system;
 mod tui;
 

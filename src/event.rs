@@ -18,29 +18,45 @@ pub fn handle_key(
 
     match key.code {
         KeyCode::Char('q') => app.quit(),
-        KeyCode::Down | KeyCode::Char('j') => app.move_down(),
-        KeyCode::Up | KeyCode::Char('k') => app.move_up(),
+        KeyCode::Down | KeyCode::Char('j') => match app.screen {
+            Screen::Library | Screen::Playlist { .. } => {
+                app.move_down();
+            }
+            Screen::Options => {
+                app.options_down();
+            }
+            Screen::Help => {}
+        },
+        KeyCode::Up | KeyCode::Char('k') => match app.screen {
+            Screen::Library | Screen::Playlist { .. } => {
+                app.move_up();
+            }
+            Screen::Options => {
+                app.options_up();
+            }
+            Screen::Help => {}
+        },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
 
         KeyCode::Char('?') => {}
         KeyCode::Char('o') => app.open_options(),
 
-        KeyCode::Enter => {
-            let playlist_screen = matches!(app.screen, Screen::Playlist { .. });
-
-            app.enter();
-
-            if playlist_screen {
-                if let Some(path) = app.selected_song_path() {
-                    audio_player.play(path)?;
-                    app.mark_selected_song_playing();
-                    app.sync_playback_time(
-                        audio_player.position(),
-                        audio_player.duration(),
-                    );
-                }
+        KeyCode::Enter => match app.screen {
+            Screen::Options => {
+                app.activate_selected_option()?;
             }
-        }
+
+            Screen::Playlist { .. } => {
+                app.enter();
+                play_selected_song(app, audio_player)?;
+            }
+
+            Screen::Library => {
+                app.enter();
+            }
+
+            Screen::Help => {}
+        },
 
         KeyCode::Char(' ') => {
             if app.playback.status != PlaybackStatus::Stopped {
@@ -77,6 +93,22 @@ pub fn handle_key(
 
         _ => {}
     }
+
+    Ok(())
+}
+
+fn play_selected_song(
+    app: &mut App,
+    audio_player: &mut AudioPlayer,
+) -> Result<()> {
+    let Some(path) = app.selected_song_path().map(|path| path.to_path_buf())
+    else {
+        return Ok(());
+    };
+
+    audio_player.play(&path)?;
+    app.mark_selected_song_playing();
+    app.sync_playback_time(audio_player.position(), audio_player.duration());
 
     Ok(())
 }
