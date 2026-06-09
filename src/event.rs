@@ -38,7 +38,8 @@ pub fn handle_key(
         },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
 
-        KeyCode::Char('?') => {}
+        KeyCode::Char('?') => app.toggle_help(),
+
         KeyCode::Char('o') => app.open_options(),
 
         KeyCode::Enter => match app.screen {
