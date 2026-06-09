@@ -1,4 +1,5 @@
 pub mod library;
+pub mod options;
 pub mod player;
 pub mod theme;
 pub mod ui;

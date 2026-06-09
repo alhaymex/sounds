@@ -4,9 +4,14 @@ use ratatui::{
     text::Line,
 };
 
-use crate::tui::theme::{key_inline, muted};
-use crate::tui::{library::draw_library, player::draw_player};
+use crate::tui::{
+    library::draw_library, options::draw_options_screen, player::draw_player,
+};
 use crate::{app::App, tui::theme::draw_rain_background};
+use crate::{
+    app::Screen,
+    tui::theme::{key_inline, muted},
+};
 
 pub fn draw(frame: &mut Frame, app: &mut App) {
     let top_margin = 3.min(frame.area().height / 4);
@@ -19,11 +24,26 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     ])
     .areas(frame.area());
 
-    draw_rain_background(frame, frame.area(), app.playback.volume, app.tick);
-
-    draw_library(frame, app, body);
-    draw_player(frame, app, player);
-    draw_footer(frame, app, footer);
+    match app.screen {
+        Screen::Library | Screen::Playlist { .. } => {
+            if app.config.rain_enabled {
+                draw_rain_background(
+                    frame,
+                    frame.area(),
+                    app.playback.volume,
+                    app.tick,
+                );
+            }
+            draw_library(frame, app, body);
+            draw_player(frame, app, player);
+            draw_footer(frame, app, footer);
+        }
+        Screen::Options => {
+            draw_options_screen(frame, app, body);
+        }
+        Screen::Help => {}
+        _ => {}
+    }
 }
 
 fn draw_footer(frame: &mut Frame, _app: &mut App, layout: Rect) {
@@ -36,8 +56,8 @@ fn draw_footer(frame: &mut Frame, _app: &mut App, layout: Rect) {
         muted(" back  "),
         key_inline("[f]"),
         muted(" search  "),
-        key_inline("[y]"),
-        muted(" youtube  "),
+        key_inline("[o]"),
+        muted(" options  "),
         key_inline("[?]"),
         muted(" help  "),
         key_inline("[q]"),

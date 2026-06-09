@@ -60,8 +60,8 @@ mod tests {
         );
     }
 
-    // #[test]
-    // fn gets_dir_name_from_path() {
-    //     assert_eq!(dir_name(Path::new("/home/user/Music")), "Music");
-    // }
+    #[test]
+    fn gets_dir_name_from_path() {
+        assert_eq!(dir_name(Path::new("/home/user/Music")), "Music");
+    }
 }

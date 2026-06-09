@@ -7,9 +7,14 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Settings {
     pub library_dir: Option<PathBuf>,
+    pub rain_enabled: bool,
 }
+
+// TODO: implement a default for Settings
+// and add the rest of the options
 
 impl Settings {
     pub fn load() -> Result<Self> {
@@ -92,6 +97,7 @@ mod tests {
 
         let settings = Settings {
             library_dir: Some(music_dir.clone()),
+            rain_enabled: true,
         };
 
         settings.save_to(&path)?;
@@ -112,6 +118,7 @@ mod tests {
 
         let settings = Settings {
             library_dir: Some(music_dir.clone()),
+            rain_enabled: true,
         };
 
         settings.save_to(&path)?;
@@ -130,6 +137,7 @@ mod tests {
 
         let settings = Settings {
             library_dir: Some(temp.path().join("Music")),
+            rain_enabled: true,
         };
 
         settings.save_to(&path)?;

@@ -13,11 +13,12 @@ use crate::{
     system::settings::{Settings, default_library_dir},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Screen {
     Library,
     Playlist { path: PathBuf },
     Help,
-    Settings,
+    Options,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -42,7 +43,7 @@ impl Default for PlaybackState {
             selected_song: None,
             current_song: None,
             status: PlaybackStatus::Stopped,
-            volume: 100,
+            volume: 75,
             position: Duration::ZERO,
             duration: None,
         }
@@ -55,14 +56,20 @@ pub struct PlaylistRow {
     pub song_count: usize,
 }
 
+pub struct Config {
+    pub rain_enabled: bool,
+}
+
 pub struct App {
     pub screen: Screen,
+    pub prev_screen: Option<Screen>,
     pub library: Library,
     pub should_quit: bool,
     pub selected_library: usize,
     pub selected_playlist: usize,
     pub playback: PlaybackState,
     pub tick: u64,
+    pub config: Config,
 }
 
 impl App {
@@ -79,11 +86,17 @@ impl App {
         Ok(Self {
             library,
             screen: Screen::Library,
+            prev_screen: None,
             playback: PlaybackState::default(),
             should_quit: false,
             selected_library: 0,
             selected_playlist: 0,
             tick: 0,
+            config: {
+                Config {
+                    rain_enabled: settings.rain_enabled,
+                }
+            },
         })
     }
 
@@ -121,7 +134,7 @@ impl App {
                 }
             }
 
-            Screen::Settings => {}
+            Screen::Options => {}
             Screen::Help => {}
         }
     }
@@ -148,7 +161,7 @@ impl App {
                 self.selected_playlist = (self.selected_playlist + 1) % row_len;
             }
 
-            Screen::Settings => {}
+            Screen::Options => {}
             Screen::Help => {}
         }
     }
@@ -169,7 +182,7 @@ impl App {
 
             Screen::Playlist { .. } => {}
 
-            Screen::Settings => {}
+            Screen::Options => {}
             Screen::Help => {}
         }
     }
@@ -181,7 +194,13 @@ impl App {
                 self.screen = Screen::Library;
             }
 
-            Screen::Settings => {}
+            Screen::Options => {
+                if let Some(prev) = self.prev_screen.take() {
+                    self.screen = prev;
+                } else {
+                    self.screen = Screen::Library;
+                }
+            }
             Screen::Help => {}
         }
     }
@@ -288,15 +307,24 @@ impl App {
         volume
     }
 
+    pub fn open_options(&mut self) {
+        if self.screen == Screen::Options {
+            return;
+        }
+
+        self.prev_screen = Some(self.screen.clone());
+        self.screen = Screen::Options;
+    }
+
     pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {
         let library = scan_library(&dir)?;
 
         self.library = library;
 
-        Settings {
-            library_dir: Some(dir),
-        }
-        .save()?;
+        let mut settings = Settings::load()?;
+        settings.library_dir = Some(dir);
+
+        settings.save()?;
 
         Ok(())
     }

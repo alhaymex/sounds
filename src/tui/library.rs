@@ -16,7 +16,7 @@ pub fn draw_library(frame: &mut Frame, app: &mut App, area: Rect) {
         Screen::Library => draw_playlist_selector(frame, app, area),
         Screen::Playlist { path } => draw_song_selector(frame, app, area, path),
 
-        Screen::Settings => {}
+        Screen::Options => {}
         Screen::Help => {}
     }
 }

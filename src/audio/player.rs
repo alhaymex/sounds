@@ -27,7 +27,7 @@ impl AudioPlayer {
             player,
             current_path: None,
             current_duration: None,
-            volume: 100,
+            volume: 75,
         })
     }
 

@@ -22,6 +22,9 @@ pub fn handle_key(
         KeyCode::Up | KeyCode::Char('k') => app.move_up(),
         KeyCode::Backspace | KeyCode::Esc => app.back(),
 
+        KeyCode::Char('?') => {}
+        KeyCode::Char('o') => app.open_options(),
+
         KeyCode::Enter => {
             let playlist_screen = matches!(app.screen, Screen::Playlist { .. });
 
@@ -69,7 +72,7 @@ pub fn handle_key(
         }
         KeyCode::Char('-') => {
             let volume = app.volume_down();
-            audio_player.set_volume(volume)
+            audio_player.set_volume(volume);
         }
 
         _ => {}
