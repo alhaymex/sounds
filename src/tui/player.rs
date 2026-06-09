@@ -5,7 +5,7 @@ use ratatui::{
     text::{Line, Span},
 };
 
-use crate::app::App;
+use crate::app::{App, PlaybackStatus};
 use crate::tui::theme::{CONTENT_MAX_WIDTH, center_area, muted};
 
 pub fn draw_player(frame: &mut Frame, app: &App, area: Rect) {
@@ -17,15 +17,34 @@ pub fn draw_player(frame: &mut Frame, app: &App, area: Rect) {
     draw_progress_bar(frame, app, bar_area);
 }
 
-fn draw_player_info(frame: &mut Frame, _app: &App, area: Rect) {
+fn draw_player_info(frame: &mut Frame, app: &App, area: Rect) {
     let [title_area, meta_area] =
         Layout::vertical([Constraint::Length(1), Constraint::Length(1)])
             .areas(area);
 
+    let current_song_title = app
+        .playback
+        .current_song
+        .and_then(|song_id| app.library.index.get(song_id))
+        .map(|song| song.title.as_str())
+        .unwrap_or("No song playing");
+
+    let icon = match app.playback.status {
+        PlaybackStatus::Playing => "⏸ ",
+        PlaybackStatus::Paused => "▶ ",
+        PlaybackStatus::Stopped => "■ ",
+    };
+
+    let icon_color = match app.playback.status {
+        PlaybackStatus::Playing => Color::Yellow,
+        PlaybackStatus::Paused => Color::LightBlue,
+        PlaybackStatus::Stopped => Color::Gray,
+    };
+
     let title = Line::from(vec![
-        Span::styled("▶ ", Style::default().fg(Color::Gray)),
+        Span::styled(icon, Style::default().fg(icon_color)),
         Span::styled(
-            "One Piece - The Very Very Very Strongest",
+            current_song_title,
             Style::default().add_modifier(Modifier::BOLD),
         ),
     ]);

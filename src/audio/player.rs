@@ -54,4 +54,12 @@ impl AudioPlayer {
         self.player = Player::connect_new(&self.sink.mixer());
         self.current_path = None;
     }
+
+    pub fn toggle_pause(&mut self) {
+        if self.player.is_paused() {
+            self.player.play()
+        } else {
+            self.player.pause();
+        }
+    }
 }

@@ -65,13 +65,13 @@ fn draw_song_selector(
 
             // TODO: remove in favor of changing the "highlight_symbol"
             // based on the current playing
-            let text = if is_current {
-                format!("♪ {title}")
-            } else {
-                format!("♪ {title}")
-            };
+            let item = ListItem::new(Line::from(format!("♪ {title}")));
 
-            ListItem::new(Line::from(text))
+            if is_current {
+                item.style(Style::default().fg(Color::LightBlue))
+            } else {
+                item
+            }
         })
         .collect();
 

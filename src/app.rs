@@ -15,6 +15,7 @@ pub enum Screen {
     Playlist { path: PathBuf },
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlaybackStatus {
     Stopped,
     Playing,
@@ -209,7 +210,7 @@ impl App {
         song_ids.get(self.selected_playlist).copied()
     }
 
-    pub fn selected_song_path(&self) -> Option<&std::path::Path> {
+    pub fn selected_song_path(&self) -> Option<&Path> {
         let song_id = self.selected_song_id()?;
 
         self.library
@@ -229,6 +230,14 @@ impl App {
     pub fn stop_playback(&mut self) {
         self.playback.current_song = None;
         self.playback.status = PlaybackStatus::Stopped;
+    }
+
+    pub fn toggle_pause(&mut self) {
+        self.playback.status = match self.playback.status {
+            PlaybackStatus::Playing => PlaybackStatus::Paused,
+            PlaybackStatus::Paused => PlaybackStatus::Playing,
+            PlaybackStatus::Stopped => PlaybackStatus::Stopped,
+        }
     }
 
     pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {
