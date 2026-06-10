@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Build ${{ matrix.target.name }}
+    runs-on: ${{ matrix.target.os }}
+
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            binary: sounds
+            archive: tar.gz
+            install_deps: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install linux dependencies
+        if: ${{ matrix.target.install_deps }}
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev pkg-config
+
+      - name: Install rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release
+        run: cargo build --release --locked
+
+      - name: Prepare artifact
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/${{ matrix.target.binary }} dist/${{ matrix.target.binary }}
+
+      - name: Package tar.gz
+        if: ${{ matrix.target.archive == 'tar.gz' }}
+        shell: bash
+        run: |
+          tar -czf dist/sounds-${{ github.ref_name }}-${{ matrix.target.name }}.tar.gz \
+            -C dist ${{ matrix.target.binary }}
+
+      - name: Generate checksum
+        run: |
+          sha256sum dist/*.tar.gz > dist/SHA256SUMS
+
+      - name: Upload GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            dist/sounds-${{ github.ref_name }}-${{ matrix.target.name }}.${{ matrix.target.archive }}
+            dist/SHA256SUMS
