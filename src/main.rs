@@ -46,19 +46,15 @@ fn main() -> Result<()> {
 }
 
 fn update() -> Result<()> {
-    let status = self_update::backends::github::Update::configure()
-        .repo_owner("alhaymex")
-        .repo_name("sounds")
-        .bin_name("sounds")
-        .show_download_progress(true)
-        .current_version(env!("CARGO_PKG_VERSION"))
-        .build()?
-        .update()?;
+    println!("Updating sounds...");
 
-    if status.updated() {
-        println!("Updated sounds to {}", status.version());
-    } else {
-        println!("Already on the latest version ({})", status.version());
+    let status = std::process::Command::new("bash")
+        .arg("-c")
+        .arg("curl -sSL https://raw.githubusercontent.com/alhaymex/sounds/main/install.sh | bash")
+        .status()?;
+
+    if !status.success() {
+        anyhow::bail!("Update failed");
     }
 
     Ok(())
