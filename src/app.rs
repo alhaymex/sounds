@@ -5,7 +5,10 @@ use std::{
 
 use anyhow::Result;
 
-use crate::state::options::{OptionsItem, OptionsState};
+use crate::state::{
+    input::{InputTarget, TextInputState},
+    options::{OptionsItem, OptionsState},
+};
 use crate::{
     library::{
         model::{Library, Node, SongId},
@@ -72,6 +75,7 @@ pub struct App {
     pub tick: u64,
     pub config: Config,
     pub options: OptionsState,
+    pub input: Option<TextInputState>,
 }
 
 impl App {
@@ -94,6 +98,7 @@ impl App {
             selected_library: 0,
             selected_playlist: 0,
             tick: 0,
+            input: None,
             options: { OptionsState::default() },
             config: {
                 Config {
@@ -336,7 +341,11 @@ impl App {
     pub fn activate_selected_option(&mut self) -> Result<()> {
         match self.options.selected_item() {
             OptionsItem::LibraryPath => {
-                // edit library path
+                self.start_input(
+                    InputTarget::LibraryPath,
+                    self.library.root.display().to_string(),
+                );
+
                 Ok(())
             }
 
@@ -374,6 +383,52 @@ impl App {
             self.prev_screen = Some(self.screen.clone());
             self.screen = Screen::Help;
         }
+    }
+
+    pub fn is_input_active(&self) -> bool {
+        self.input.is_some()
+    }
+
+    pub fn start_input(
+        &mut self,
+        target: InputTarget,
+        value: impl Into<String>,
+    ) {
+        self.input = Some(TextInputState::new(target, value))
+    }
+
+    pub fn cancel_input(&mut self) {
+        self.input = None;
+    }
+
+    pub fn input_char(&mut self, ch: char) {
+        if let Some(input) = self.input.as_mut() {
+            input.push_char(ch);
+        }
+    }
+
+    pub fn input_backspace(&mut self) {
+        if let Some(input) = self.input.as_mut() {
+            input.pop_char();
+        }
+    }
+
+    pub fn submit_input(&mut self) -> Result<()> {
+        let Some(input) = self.input.take() else {
+            return Ok(());
+        };
+
+        match input.target {
+            InputTarget::LibraryPath => {
+                let dir = PathBuf::from(input.value.trim());
+                self.set_library_dir(dir)?;
+            }
+            // TODO: search should be Search(Screen)
+            // we might add searching in multiple screens
+            InputTarget::Search => {}
+        }
+
+        Ok(())
     }
 }
 

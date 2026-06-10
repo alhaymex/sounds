@@ -16,6 +16,18 @@ pub fn handle_key(
         return Ok(());
     }
 
+    if app.is_input_active() {
+        match key.code {
+            KeyCode::Enter => app.submit_input()?,
+            KeyCode::Esc => app.cancel_input(),
+            KeyCode::BackTab => app.input_backspace(),
+            KeyCode::Char(ch) => app.input_char(ch),
+            _ => {}
+        }
+
+        return Ok(());
+    }
+
     match key.code {
         KeyCode::Char('q') => app.quit(),
         KeyCode::Down | KeyCode::Char('j') => match app.screen {

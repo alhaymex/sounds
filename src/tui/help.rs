@@ -33,7 +33,6 @@ pub fn draw_help_screen(frame: &mut Frame, _app: &mut App, area: Rect) {
         Line::from(""),
         Line::from(vec![title("Application")]),
         Line::from(vec![key_inline("[q]      "), muted(" Quit")]),
-        Line::from(vec![key_inline("[Ctrl+C] "), muted(" Force quit")]),
     ];
 
     frame.render_widget(Paragraph::new(lines), area);
