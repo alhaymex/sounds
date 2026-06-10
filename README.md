@@ -1,5 +1,11 @@
 # Sounds
 
+# Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/alhaymex/sounds/main/install.sh | bash
+```
+
 # TODO
 - [ ] ability to change default library dir
 - [ ] create the dir if it doesn't exist
