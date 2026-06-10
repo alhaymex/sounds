@@ -8,11 +8,19 @@ use ratatui::{
 
 use crate::{
     app::App,
+    state::input::InputTarget,
     tui::theme::{CONTENT_MAX_WIDTH, center_area},
 };
 
 pub fn draw_options_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     let area = center_area(area, CONTENT_MAX_WIDTH);
+
+    let library_path = match &app.input {
+        Some(input) if input.target == InputTarget::LibraryPath => {
+            format!("{}▌", input.value)
+        }
+        _ => app.library.root.display().to_string(),
+    };
 
     let rain = if app.config.rain_enabled {
         "[x] Enabled"
@@ -23,8 +31,7 @@ pub fn draw_options_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     let items = vec![
         ListItem::new(Line::from(format!(
             "{:<16}{}",
-            "Library Path",
-            app.library.root.display()
+            "Library Path", library_path
         ))),
         ListItem::new(Line::from(format!("{:<16}{}", "Rain Effect", rain))),
     ];

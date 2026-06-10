@@ -20,7 +20,7 @@ pub fn handle_key(
         match key.code {
             KeyCode::Enter => app.submit_input()?,
             KeyCode::Esc => app.cancel_input(),
-            KeyCode::BackTab => app.input_backspace(),
+            KeyCode::Backspace => app.input_backspace(),
             KeyCode::Char(ch) => app.input_char(ch),
             _ => {}
         }

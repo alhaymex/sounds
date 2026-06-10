@@ -423,7 +423,7 @@ impl App {
                 let dir = PathBuf::from(input.value.trim());
                 self.set_library_dir(dir)?;
             }
-            // TODO: search should be Search(Screen)
+            // TODO: search should be Search(SearchScope)
             // we might add searching in multiple screens
             InputTarget::Search => {}
         }
