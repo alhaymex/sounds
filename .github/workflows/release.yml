@@ -23,6 +23,12 @@ jobs:
             archive: tar.gz
             install_deps: true
 
+          - name: windows-x86_64
+            os: windows-latest
+            binary: sounds.exe
+            archive: zip
+            install_deps: false
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -53,9 +59,16 @@ jobs:
           tar -czf dist/sounds-${{ github.ref_name }}-${{ matrix.target.name }}.tar.gz \
             -C dist ${{ matrix.target.binary }}
 
-      - name: Generate checksum
+      - name: Package zip
+        if: ${{ matrix.target.archive == 'zip' }}
+        shell: bash
         run: |
-          sha256sum dist/*.tar.gz > dist/SHA256SUMS
+            cd dist && 7z a sounds-${{ github.ref_name }}-${{ matrix.target.name }}.zip ${{ matrix.target.binary }}
+
+      - name: Generate checksum
+        shell: bash
+        run: |
+          cd dist && sha256sum sounds-${{ github.ref_name }}-${{ matrix.target.name }}.${{ matrix.target.archive }} > SHA256SUMS
 
       - name: Upload GitHub release
         uses: softprops/action-gh-release@v3
