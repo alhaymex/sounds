@@ -63,12 +63,12 @@ jobs:
         if: ${{ matrix.target.archive == 'zip' }}
         shell: bash
         run: |
-            cd dist && 7z a sounds-github.refname -{{ matrix.target.name }}.zip ${{ matrix.target.binary }}
+            cd dist && 7z a sounds-${{ github.ref_name }}-${{ matrix.target.name }}.zip ${{ matrix.target.binary }}
 
       - name: Generate checksum
         shell: bash
         run: |
-          cd dist && sha256sum sounds-github.refname -{{ matrix.target.name }}.${{ matrix.target.archive }} > SHA256SUMS
+          cd dist && sha256sum sounds-${{ github.ref_name }}-${{ matrix.target.name }}.${{ matrix.target.archive }} > SHA256SUMS
 
       - name: Upload GitHub release
         uses: softprops/action-gh-release@v3
