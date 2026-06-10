@@ -11,7 +11,7 @@ codegen-units = 1
 
 [dependencies]
 anyhow = "1.0.102"
-clap = "4.6.1"
+clap = { version = "4.6.1", features = ["derive"] }
 crossterm = "0.29.0"
 dirs = "6.0.0"
 ratatui = "0.30.0"
@@ -19,6 +19,7 @@ serde_json = "1.0.150"
 serde = { version = "1", features = ["derive"] }
 rodio = "0.22.2"
 lofty = "0.24.0"
+self_update = { version = "0.44.0", features = ["archive-tar", "archive-zip", "compression-flate2"] }
 
 [dev-dependencies]
 tempfile = "3.27.0"
