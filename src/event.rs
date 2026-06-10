@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::app::{App, PlaybackStatus, Screen};
 use crate::audio::player::AudioPlayer;
@@ -13,6 +13,10 @@ pub fn handle_key(
         && matches!(key.code, KeyCode::Char('c'))
     {
         app.quit();
+        return Ok(());
+    }
+
+    if key.kind != KeyEventKind::Press {
         return Ok(());
     }
 
