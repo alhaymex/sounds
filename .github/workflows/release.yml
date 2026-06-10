@@ -53,8 +53,13 @@ jobs:
           tar -czf dist/sounds-${{ github.ref_name }}-${{ matrix.target.name }}.tar.gz \
             -C dist ${{ matrix.target.binary }}
 
+      - name: Generate checksum
+        run: |
+          sha256sum dist/*.tar.gz > dist/SHA256SUMS
+
       - name: Upload GitHub release
         uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/sounds-${{ github.ref_name }}-${{ matrix.target.name }}.${{ matrix.target.archive }}
+            dist/SHA256SUMS
