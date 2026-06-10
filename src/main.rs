@@ -7,7 +7,7 @@ mod system;
 mod tui;
 
 use anyhow::{Ok, Result};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 use crate::app::App;
 
@@ -19,21 +19,28 @@ use crate::app::App;
     long_about = "Sounds is a lightweight terminal audio player that lets you browse, manage, and play music directly from your local files."
 )]
 struct CLI {
+    #[clap(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
     /// Update to the latest version
-    #[arg(long)]
-    update: bool,
+    Update,
 }
 
 fn main() -> Result<()> {
     let cli = CLI::parse();
 
-    if cli.update {
-        update()?;
-        return Ok(());
+    match cli.command {
+        Some(Command::Update) => {
+            update()?;
+        }
+        None => {
+            let app = App::new()?;
+            tui::run(app)?;
+        }
     }
-
-    let app = App::new()?;
-    tui::run(app)?;
 
     Ok(())
 }
