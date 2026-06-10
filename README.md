@@ -2,6 +2,7 @@
 
 # TODO
 - [ ] ability to change default library dir
+- [ ] create the dir if it doesn't exist
 - [ ] configurable auto loop
 - [ ] search
 - [ ] add scrolling to the help page

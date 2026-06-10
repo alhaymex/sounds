@@ -1,7 +1,7 @@
 use ratatui::{
     Frame,
     layout::Rect,
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::Line,
     widgets::{Block, List, ListItem, ListState},
 };
@@ -85,7 +85,7 @@ fn draw_song_selector(
     );
 
     let list = List::new(items)
-        .block(Block::default().title(title))
+        .block(Block::default().title(title).style(Modifier::BOLD))
         .highlight_symbol("▶ ")
         .highlight_style(Style::default().fg(Color::LightBlue))
         .style(Style::default().fg(Color::White));
