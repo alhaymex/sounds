@@ -55,7 +55,11 @@ fn update() -> Result<()> {
         .build()?
         .update()?;
 
-    println!("Updated sounds to {}", status.version());
+    if status.updated() {
+        println!("Updated sounds to {}", status.version());
+    } else {
+        println!("Already on the latest version ({})", status.version());
+    }
 
     Ok(())
 }

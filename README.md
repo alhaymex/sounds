@@ -7,7 +7,6 @@ curl -sSL https://raw.githubusercontent.com/alhaymex/sounds/main/install.sh | ba
 ```
 
 # TODO
-- [ ] ability to change default library dir
 - [ ] create the dir if it doesn't exist
 - [ ] configurable auto loop
 - [ ] search
