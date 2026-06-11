@@ -1,9 +1,9 @@
+use anyhow::{Context, Result, bail};
 use std::{
+    fs,
     path::{Path, PathBuf},
     time::Duration,
 };
-
-use anyhow::Result;
 
 use crate::state::{
     input::{InputTarget, TextInputState},
@@ -364,7 +364,19 @@ impl App {
     }
 
     pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {
-        let library = scan_library(&dir)?;
+        if dir.exists() && !dir.is_dir() {
+            bail!("library path is not a directory {}", dir.display());
+        }
+
+        if !dir.exists() {
+            fs::create_dir_all(&dir).with_context(|| {
+                format!("failed to create library directory {}", dir.display())
+            })?;
+        }
+
+        let library = scan_library(&dir).with_context(|| {
+            format!("failed to scan directory {}", dir.display())
+        })?;
 
         self.library = library;
 
