@@ -45,6 +45,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// Only work for linux/macos
 fn update() -> Result<()> {
     println!("Updating sounds...");
 

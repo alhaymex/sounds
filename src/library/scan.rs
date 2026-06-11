@@ -23,11 +23,31 @@ pub fn scan_library(root: impl AsRef<Path>) -> io::Result<Library> {
 pub fn scan_dir(dir: &Path, index: &mut Vec<SongRef>) -> io::Result<Node> {
     let mut children = Vec::new();
 
-    for entry in fs::read_dir(dir)? {
+    let entries = match fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {
+            return Ok(Node::Dir {
+                name: dir_name(dir),
+                path: dir.to_path_buf(),
+                children,
+            });
+        }
+        Err(error) => return Err(error),
+    };
+
+    for entry in entries {
         let path = entry?.path();
 
         if path.is_dir() {
-            children.push(scan_dir(&path, index)?);
+            match scan_dir(&path, index) {
+                Ok(child) => children.push(child),
+                Err(error)
+                    if error.kind() == io::ErrorKind::PermissionDenied =>
+                {
+                    continue;
+                }
+                Err(error) => return Err(error),
+            }
         } else if is_audio_file(&path) {
             let id = index.len();
 
@@ -209,6 +229,42 @@ mod tests {
         };
 
         assert!(find_dir_by_path(&tree, &song_path).is_none());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn scan_library_skips_permission_denied_directories() -> io::Result<()> {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp = tempdir()?;
+        let root = temp.path();
+
+        let readable_dir = root.join("readable");
+        let unreadable_dir = root.join("unreadable");
+
+        create_dir_all(&readable_dir)?;
+        create_dir_all(&unreadable_dir)?;
+
+        File::create(readable_dir.join("song.mp3"))?;
+
+        let original_permissions = fs::metadata(&unreadable_dir)?.permissions();
+
+        fs::set_permissions(
+            &unreadable_dir,
+            fs::Permissions::from_mode(0o000),
+        )?;
+
+        let result = scan_library(root);
+
+        // Restore permissions before assertions/cleanup so tempdir can be deleted.
+        fs::set_permissions(&unreadable_dir, original_permissions)?;
+
+        let library = result?;
+
+        assert_eq!(library.index.len(), 1);
+        assert_eq!(library.index[0].title, "song");
+
+        Ok(())
     }
 
     fn count_song_nodes(node: &Node) -> usize {
