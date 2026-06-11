@@ -26,7 +26,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     .areas(frame.area());
 
     match app.screen {
-        Screen::Library | Screen::Playlist { .. } => {
+        Screen::Library { .. } => {
             if app.config.rain_enabled {
                 draw_rain_background(
                     frame,
@@ -40,6 +40,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         Screen::Options => draw_options_screen(frame, app, body),
         Screen::Help => draw_help_screen(frame, app, body),
     }
+
     draw_player(frame, app, player);
     draw_footer(frame, app, footer);
 }

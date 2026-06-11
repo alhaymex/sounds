@@ -19,8 +19,7 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Screen {
-    Library,
-    Playlist { path: PathBuf },
+    Library { path: PathBuf, selected: usize },
     Options,
     Help,
 }
@@ -54,10 +53,17 @@ impl Default for PlaybackState {
     }
 }
 
-pub struct PlaylistRow {
-    pub name: String,
-    pub path: PathBuf,
-    pub song_count: usize,
+#[derive(Debug, Clone)]
+pub enum DirEntry {
+    Dir {
+        name: String,
+        path: PathBuf,
+        song_count: usize,
+    },
+    Song {
+        id: SongId,
+        title: String,
+    },
 }
 
 pub struct Config {
@@ -66,11 +72,9 @@ pub struct Config {
 
 pub struct App {
     pub screen: Screen,
-    pub prev_screen: Option<Screen>,
+    pub navigation_stack: Vec<Screen>,
     pub library: Library,
     pub should_quit: bool,
-    pub selected_library: usize,
-    pub selected_playlist: usize,
     pub playback: PlaybackState,
     pub tick: u64,
     pub config: Config,
@@ -91,12 +95,13 @@ impl App {
 
         Ok(Self {
             library,
-            screen: Screen::Library,
-            prev_screen: None,
+            screen: Screen::Library {
+                path: library_dir,
+                selected: 0,
+            },
+            navigation_stack: Vec::new(),
             playback: PlaybackState::default(),
             should_quit: false,
-            selected_library: 0,
-            selected_playlist: 0,
             tick: 0,
             input: None,
             options: { OptionsState::default() },
@@ -113,135 +118,102 @@ impl App {
     }
 
     pub fn move_up(&mut self) {
-        match self.screen {
-            Screen::Library => {
-                let rows_len = self.playlist_rows().len();
+        let Screen::Library { ref path, selected } = self.screen else {
+            return;
+        };
 
-                if rows_len == 0 {
-                    return;
-                }
+        let path = path.clone();
+        let selected = selected;
+        let count = self.dir_entries(&path).len();
+        if count == 0 {
+            return;
+        }
 
-                if self.selected_library == 0 {
-                    self.selected_library = rows_len - 1;
-                } else {
-                    self.selected_library -= 1;
-                }
-            }
+        let new = if selected == 0 {
+            count - 1
+        } else {
+            selected - 1
+        };
 
-            Screen::Playlist { .. } => {
-                let rows_len = self.current_playing_song_ids().len();
-
-                if rows_len == 0 {
-                    return;
-                }
-
-                if self.selected_playlist == 0 {
-                    self.selected_playlist = rows_len - 1;
-                } else {
-                    self.selected_playlist -= 1;
-                }
-            }
-
-            _ => {}
+        if let Screen::Library {
+            ref mut selected, ..
+        } = self.screen
+        {
+            *selected = new;
         }
     }
 
     pub fn move_down(&mut self) {
-        match self.screen {
-            Screen::Library => {
-                let rows_len = self.playlist_rows().len();
+        let Screen::Library { ref path, selected } = self.screen else {
+            return;
+        };
 
-                if rows_len == 0 {
-                    return;
-                }
+        let path = path.clone();
+        let selected = selected;
+        let count = self.dir_entries(&path).len();
+        if count == 0 {
+            return;
+        }
 
-                self.selected_library = (self.selected_library + 1) % rows_len;
-            }
+        let new = (selected + 1) % count;
 
-            Screen::Playlist { .. } => {
-                let row_len = self.current_playing_song_ids().len();
-
-                if row_len == 0 {
-                    return;
-                }
-
-                self.selected_playlist = (self.selected_playlist + 1) % row_len;
-            }
-
-            Screen::Options => {}
-            Screen::Help => {}
+        if let Screen::Library {
+            ref mut selected, ..
+        } = self.screen
+        {
+            *selected = new;
         }
     }
 
     pub fn enter(&mut self) {
-        match self.screen {
-            Screen::Library => {
-                let rows = self.playlist_rows();
+        let Screen::Library { ref path, selected } = self.screen else {
+            return;
+        };
 
-                if let Some(row) = rows.get(self.selected_library) {
-                    self.screen = Screen::Playlist {
-                        path: row.path.clone(),
-                    };
+        let path = path.clone();
+        let entries = self.dir_entries(&path);
+        let Some(entry) = entries.get(selected) else {
+            return;
+        };
 
-                    self.selected_playlist = 0;
-                }
+        match entry {
+            DirEntry::Dir {
+                path: child_path, ..
+            } => {
+                let current = self.screen.clone();
+
+                self.navigation_stack.push(current);
+                self.screen = Screen::Library {
+                    path: child_path.clone(),
+                    selected: 0,
+                };
             }
-
-            Screen::Playlist { .. } => {}
-
-            Screen::Options => {}
-            Screen::Help => {}
+            DirEntry::Song { .. } => {}
         }
     }
 
     pub fn back(&mut self) {
         match self.screen {
-            Screen::Library => {}
-            Screen::Playlist { .. } => {
-                self.screen = Screen::Library;
-            }
-
-            Screen::Options => {
-                if let Some(prev) = self.prev_screen.take() {
+            Screen::Library { .. } => {
+                if let Some(prev) = self.navigation_stack.pop() {
                     self.screen = prev;
-                } else {
-                    self.screen = Screen::Library;
                 }
             }
-
-            Screen::Help => {
-                if let Some(prev) = self.prev_screen.take() {
+            Screen::Options | Screen::Help => {
+                if let Some(prev) = self.navigation_stack.pop() {
                     self.screen = prev;
                 } else {
-                    self.screen = Screen::Library;
+                    self.screen = Screen::Library {
+                        path: self.library.root.clone(),
+                        selected: 0,
+                    };
                 }
             }
         }
     }
 
-    pub fn playlist_rows(&self) -> Vec<PlaylistRow> {
-        let mut rows = Vec::new();
-
-        let Some(root) = self.library.tree.as_ref() else {
-            return rows;
-        };
-
-        match root {
-            Node::Dir { children, .. } => {
-                for child in children {
-                    if matches!(child, Node::Dir { .. }) {
-                        collect_playlist_rows(child, &mut rows);
-                    }
-                }
-            }
-            Node::Song { .. } => {}
-        };
-
-        rows
-    }
-
     pub fn current_playing_song_ids(&self) -> Vec<SongId> {
-        let Screen::Playlist { path } = &self.screen else {
+        let Screen::Library { ref path, .. } = self.screen else {
             return Vec::new();
         };
 
@@ -259,9 +231,16 @@ impl App {
     }
 
     pub fn selected_song_id(&self) -> Option<SongId> {
-        let song_ids = self.current_playing_song_ids();
+        let Screen::Library { ref path, selected } = self.screen else {
+            return None;
+        };
 
-        song_ids.get(self.selected_playlist).copied()
+        let path = path.clone();
+        let entries = self.dir_entries(&path);
+        match entries.get(selected)? {
+            DirEntry::Song { id, .. } => Some(*id),
+            DirEntry::Dir { .. } => None,
+        }
     }
 
     pub fn selected_song_path(&self) -> Option<&Path> {
@@ -326,7 +305,7 @@ impl App {
             return;
         }
 
-        self.prev_screen = Some(self.screen.clone());
+        self.navigation_stack.push(self.screen.clone());
         self.screen = Screen::Options;
     }
 
@@ -379,6 +358,11 @@ impl App {
         })?;
 
         self.library = library;
+        self.navigation_stack.clear();
+        self.screen = Screen::Library {
+            path: dir.clone(),
+            selected: 0,
+        };
 
         let mut settings = Settings::load()?;
         settings.library_dir = Some(dir);
@@ -390,9 +374,11 @@ impl App {
 
     pub fn toggle_help(&mut self) {
         if self.screen == Screen::Help {
-            self.screen = self.prev_screen.take().unwrap_or(Screen::Library);
+            if let Some(prev) = self.navigation_stack.pop() {
+                self.screen = prev;
+            }
         } else {
-            self.prev_screen = Some(self.screen.clone());
+            self.navigation_stack.push(self.screen.clone());
             self.screen = Screen::Help;
         }
     }
@@ -442,33 +428,48 @@ impl App {
 
         Ok(())
     }
-}
 
-fn collect_playlist_rows(node: &Node, rows: &mut Vec<PlaylistRow>) {
-    match node {
-        Node::Dir {
-            name,
-            path,
-            children,
-        } => {
-            let song_count = count_songs(node);
+    pub fn dir_entries(&self, path: &Path) -> Vec<DirEntry> {
+        let Some(root) = self.library.tree.as_ref() else {
+            return Vec::new();
+        };
 
-            if song_count > 0 {
-                rows.push(PlaylistRow {
-                    name: name.clone(),
-                    path: path.clone(),
-                    song_count: count_songs(node),
-                });
-            }
+        let Some(node) = find_dir_by_path(root, path) else {
+            return Vec::new();
+        };
 
-            for child in children {
-                if matches!(child, Node::Dir { .. }) {
-                    collect_playlist_rows(child, rows);
+        let Node::Dir { children, .. } = node else {
+            return Vec::new();
+        };
+
+        children
+            .iter()
+            .filter_map(|child| match child {
+                Node::Dir { name, path, .. } => {
+                    let song_count = count_songs(child);
+
+                    if song_count > 0 {
+                        Some(DirEntry::Dir {
+                            name: name.clone(),
+                            path: path.clone(),
+                            song_count,
+                        })
+                    } else {
+                        None
+                    }
                 }
-            }
-        }
+                Node::Song { id } => {
+                    let title = self
+                        .library
+                        .index
+                        .get(*id)
+                        .map(|s| s.title.clone())
+                        .unwrap_or_else(|| "Unknown".to_string());
 
-        Node::Song { .. } => {}
+                    Some(DirEntry::Song { id: *id, title })
+                }
+            })
+            .collect()
     }
 }
 
