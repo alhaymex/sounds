@@ -69,12 +69,12 @@ This opens the TUI where you can browse and play your music. Press `?` for keybi
 
 ## Roadmap
 
-- [ ] Auto-play next song
+- [x] Support nested directories in the file browser
+- [x] Navigate screen history by changing `prev_screen: Screen` to a `Vec<Screen>`
+- [x] Auto-play next song
 - [ ] Search
 - [ ] YouTube integration via yt-dlp
 - [ ] macOS support
-- [ ] Support nested directories in the file browser
-- [ ] Navigate screen history by changing `prev_screen: Screen` to a `Vec<Screen>`
 - [ ] Integrate `rusqlite` for complex searches, indexing, and features like favorites
 - [ ] Add simple, scoped file manipulation (e.g. rename a playlist or a song)
 

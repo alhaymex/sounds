@@ -57,6 +57,22 @@ pub fn run(mut app: App) -> Result<()> {
             audio_player.duration(),
         );
 
+        // auto play next song when curr finishes
+        if audio_player.is_finished() {
+            if let Some(next_id) = app.next_song_id() {
+                if let Some(path) = app.advance_to_song(next_id) {
+                    let _ = audio_player.play(&path);
+                    app.sync_playback_time(
+                        audio_player.position(),
+                        audio_player.duration(),
+                    );
+                }
+            } else {
+                audio_player.stop();
+                app.stop_playback();
+            }
+        }
+
         terminal.draw(|frame| ui::draw(frame, &mut app))?;
 
         if ct_event::poll(Duration::from_millis(200))? {

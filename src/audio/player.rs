@@ -122,7 +122,7 @@ impl AudioPlayer {
         self.volume
     }
 
-    pub fn _is_finished(&self) -> bool {
+    pub fn is_finished(&self) -> bool {
         self.current_path.is_some() && self.player.empty()
     }
 
