@@ -84,7 +84,7 @@ pub struct App {
     pub config: Config,
     pub options: OptionsState,
     pub input: Option<TextInputState>,
-    pub confirm: Option<CongirmAction>,
+    pub confirm: Option<ConfirmAction>,
 }
 
 impl App {
@@ -216,24 +216,6 @@ impl App {
                 }
             }
         }
-    }
-
-    pub fn current_playing_song_ids(&self) -> Vec<SongId> {
-        let Screen::Library { ref path, .. } = self.screen else {
-            return Vec::new();
-        };
-
-        let Some(root) = self.library.tree.as_ref() else {
-            return Vec::new();
-        };
-
-        let Some(node) = find_dir_by_path(root, path) else {
-            return Vec::new();
-        };
-
-        let mut songs = Vec::new();
-        collect_songs(node, &mut songs);
-        songs
     }
 
     pub fn selected_song_id(&self) -> Option<SongId> {
@@ -545,10 +527,84 @@ impl App {
                 let dir = PathBuf::from(input.value.trim());
                 self.set_library_dir(dir)?;
             }
-            // TODO: search should be Search(SearchScope)
-            // we might add searching in multiple screens
             InputTarget::Search => {}
-            _ => {}
+            InputTarget::Rename { original_path } => {
+                if !input.value.trim().is_empty() {
+                    self.rename_entry(&original_path, &input.value);
+                }
+            }
+            InputTarget::NewPlaylist { parent_path } => {
+                if !input.value.trim().is_empty() {
+                    self.create_playlist(&parent_path, &input.value);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn rename_entry(
+        &mut self,
+        original: &Path,
+        new_name: &str,
+    ) -> Result<()> {
+        let new_path =
+            original.parent().unwrap_or(original).join(new_name.trim());
+
+        fs::rename(original, &new_path).with_context(|| {
+            format!("failed to rename {}", original.display())
+        })?;
+
+        self.rescan_library()
+    }
+
+    pub fn create_playlist(&mut self, parent: &Path, name: &str) -> Result<()> {
+        let dir_path = parent.join(name.trim());
+
+        fs::create_dir_all(&dir_path).with_context(|| {
+            format!("failed to create playlist {}", dir_path.display())
+        })?;
+
+        self.rescan_library()
+    }
+
+    pub fn delete_entry(&mut self, path: &Path) -> Result<()> {
+        if path.is_dir() {
+            fs::remove_dir_all(path).with_context(|| {
+                format!("failed to delete directory {}", path.display())
+            })?;
+        } else {
+            fs::remove_file(path).with_context(|| {
+                format!("failed to delete file {}", path.display())
+            })?;
+        }
+
+        self.rescan_library()
+    }
+
+    pub fn rescan_library(&mut self) -> Result<()> {
+        let library = scan_library(&self.library.root).with_context(|| {
+            format!("failed to rescan library {}", self.library.root.display())
+        })?;
+        self.library = library;
+
+        let new_selected =
+            if let Screen::Library { ref path, selected } = self.screen {
+                let path = path.clone();
+                let count = self.dir_entries(&path).len();
+                if selected >= count && count > 0 {
+                    Some(count - 1)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
+        if let (Some(new), Screen::Library { selected, .. }) =
+            (new_selected, &mut self.screen)
+        {
+            *selected = new;
         }
 
         Ok(())
