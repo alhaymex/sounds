@@ -2,7 +2,6 @@
 pub enum InputTarget {
     LibraryPath,
     Search,
-    // YoutubeSearch,
 }
 
 pub struct TextInputState {

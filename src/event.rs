@@ -35,7 +35,7 @@ pub fn handle_key(
     match key.code {
         KeyCode::Char('q') => app.quit(),
         KeyCode::Down | KeyCode::Char('j') => match app.screen {
-            Screen::Library | Screen::Playlist { .. } => {
+            Screen::Library { .. } => {
                 app.move_down();
             }
             Screen::Options => {
@@ -44,7 +44,7 @@ pub fn handle_key(
             Screen::Help => {}
         },
         KeyCode::Up | KeyCode::Char('k') => match app.screen {
-            Screen::Library | Screen::Playlist { .. } => {
+            Screen::Library { .. } => {
                 app.move_up();
             }
             Screen::Options => {
@@ -63,13 +63,12 @@ pub fn handle_key(
                 app.activate_selected_option()?;
             }
 
-            Screen::Playlist { .. } => {
-                app.enter();
-                play_selected_song(app, audio_player)?;
-            }
-
-            Screen::Library => {
-                app.enter();
+            Screen::Library { .. } => {
+                if app.selected_song_id().is_some() {
+                    play_selected_song(app, audio_player)?;
+                } else {
+                    app.enter();
+                }
             }
 
             Screen::Help => {}
