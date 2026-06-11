@@ -22,6 +22,7 @@ pub fn draw_help_screen(frame: &mut Frame, _app: &mut App, area: Rect) {
         Line::from(vec![title("Playback")]),
         Line::from(vec![key_inline("[space]  "), muted(" Play / Pause")]),
         Line::from(vec![key_inline("[s]      "), muted(" Stop playback")]),
+        Line::from(vec![key_inline("[n]      "), muted(" Next Song")]),
         Line::from(vec![key_inline("[h / ←]  "), muted(" Seek backward")]),
         Line::from(vec![key_inline("[l / →]  "), muted(" Seek forward")]),
         Line::from(vec![key_inline("[+]      "), muted(" Volume up")]),

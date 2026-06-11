@@ -252,6 +252,78 @@ impl App {
             .map(|song| song.path.as_path())
     }
 
+    pub fn next_song_id(&self) -> Option<SongId> {
+        let current_id = self.playback.current_song?;
+
+        let Screen::Library { ref path, .. } = self.screen else {
+            return None;
+        };
+
+        let path = path.clone();
+        let entries = self.dir_entries(&path);
+
+        let current_idx = entries.iter().position(|entry| {
+            matches!(entry, DirEntry::Song { id, .. } if *id == current_id)
+        })?;
+
+        entries[current_idx + 1..]
+            .iter()
+            .find_map(|entry| match entry {
+                DirEntry::Song { id, .. } => Some(*id),
+                DirEntry::Dir { .. } => None,
+            })
+    }
+
+    pub fn prev_song_id(&self) -> Option<SongId> {
+        let current_id = self.playback.current_song?;
+
+        let Screen::Library { ref path, .. } = self.screen else {
+            return None;
+        };
+
+        let path = path.clone();
+        let entries = self.dir_entries(&path);
+
+        let current_idx = entries.iter().position(|entry| {
+            matches!(entry, DirEntry::Song { id, .. } if *id == current_id)
+        })?;
+
+        entries[..current_idx].iter().find_map(|entry| match entry {
+            DirEntry::Song { id, .. } => Some(*id),
+            DirEntry::Dir { .. } => None,
+        })
+    }
+
+    pub fn advance_to_song(&mut self, song_id: SongId) -> Option<PathBuf> {
+        let path = self.library.index.get(song_id)?.path.clone();
+
+        self.playback.current_song = Some(song_id);
+        self.playback.selected_song = Some(song_id);
+        self.playback.status = PlaybackStatus::Playing;
+        self.playback.position = Duration::ZERO;
+        self.playback.duration = None;
+
+        // Find the new cursor position
+        let new_idx = if let Screen::Library { ref path, .. } = self.screen {
+            let dir_path = path.clone();
+            let entries = self.dir_entries(&dir_path);
+            entries.iter().position(
+                |e| matches!(e, DirEntry::Song { id, .. } if *id == song_id),
+            )
+        } else {
+            None
+        };
+
+        // update cursor
+        if let (Some(idx), Screen::Library { selected, .. }) =
+            (new_idx, &mut self.screen)
+        {
+            *selected = idx;
+        }
+
+        Some(path)
+    }
+
     pub fn mark_selected_song_playing(&mut self) {
         if let Some(song_id) = self.selected_song_id() {
             self.playback.selected_song = Some(song_id);
@@ -442,7 +514,7 @@ impl App {
             return Vec::new();
         };
 
-        children
+        let mut entries: Vec<DirEntry> = children
             .iter()
             .filter_map(|child| match child {
                 Node::Dir { name, path, .. } => {
@@ -469,7 +541,14 @@ impl App {
                     Some(DirEntry::Song { id: *id, title })
                 }
             })
-            .collect()
+            .collect::<Vec<_>>();
+
+        entries.sort_by_key(|entry| match entry {
+            DirEntry::Dir { .. } => 0,
+            DirEntry::Song { .. } => 1,
+        });
+
+        entries
     }
 }
 
