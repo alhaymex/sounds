@@ -24,6 +24,10 @@ pub enum Screen {
     Help,
 }
 
+pub enum ConfirmAction {
+    Delete { path: PathBuf, name: String },
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlaybackStatus {
     Stopped,
@@ -80,6 +84,7 @@ pub struct App {
     pub config: Config,
     pub options: OptionsState,
     pub input: Option<TextInputState>,
+    pub confirm: Option<CongirmAction>,
 }
 
 impl App {
@@ -110,6 +115,7 @@ impl App {
                     rain_enabled: settings.rain_enabled,
                 }
             },
+            confirm: None,
         })
     }
 
@@ -470,6 +476,49 @@ impl App {
         self.input = Some(TextInputState::new(target, value))
     }
 
+    pub fn start_rename(&mut self) {
+        let Some((path, name)) = self.selected_entry_info() else {
+            return;
+        };
+
+        self.start_input(
+            InputTarget::Rename {
+                original_path: path,
+            },
+            name,
+        );
+    }
+
+    pub fn start_new_playlist(&mut self) {
+        let parent = match self.screen {
+            Screen::Library { ref path, .. } => path.clone(),
+            _ => self.library.root.clone(),
+        };
+
+        self.start_input(
+            InputTarget::NewPlaylist {
+                parent_path: parent,
+            },
+            "",
+        );
+    }
+
+    pub fn start_delete(&mut self) {
+        let Some((path, name)) = self.selected_entry_info() else {
+            return;
+        };
+
+        self.confirm = Some(ConfirmAction::Delete { path, name });
+    }
+
+    pub fn cancel_confirm(&mut self) {
+        self.confirm = None;
+    }
+
+    pub fn is_confirming(&self) -> bool {
+        self.confirm.is_some()
+    }
+
     pub fn cancel_input(&mut self) {
         self.input = None;
     }
@@ -499,6 +548,7 @@ impl App {
             // TODO: search should be Search(SearchScope)
             // we might add searching in multiple screens
             InputTarget::Search => {}
+            _ => {}
         }
 
         Ok(())
@@ -552,6 +602,26 @@ impl App {
         });
 
         entries
+    }
+
+    pub fn selected_entry_info(&self) -> Option<(PathBuf, String)> {
+        let Screen::Library { ref path, selected } = self.screen else {
+            return None;
+        };
+
+        let path = path.clone();
+        let entries = self.dir_entries(&path);
+        let entry = entries.get(selected)?;
+
+        match entry {
+            DirEntry::Dir { name, path, .. } => {
+                Some((path.clone(), name.clone()))
+            }
+            DirEntry::Song { id, title } => {
+                let song_path = self.library.index.get(*id)?.path.clone();
+                Some((song_path, title.clone()))
+            }
+        }
     }
 }
 
