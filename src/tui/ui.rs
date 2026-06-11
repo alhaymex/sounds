@@ -5,8 +5,11 @@ use ratatui::{
 };
 
 use crate::tui::{
-    help::draw_help_screen, library::draw_library,
-    options::draw_options_screen, player::draw_player,
+    help::draw_help_screen,
+    library::draw_library,
+    options::draw_options_screen,
+    overlay::{draw_confirm_overlay, draw_input_overlay},
+    player::draw_player,
 };
 use crate::{app::App, tui::theme::draw_rain_background};
 use crate::{
@@ -43,6 +46,14 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
 
     draw_player(frame, app, player);
     draw_footer(frame, app, footer);
+
+    if let Some(input) = &app.input {
+        draw_input_overlay(frame, input, frame.area());
+    }
+
+    if let Some(confirm) = &app.confirm {
+        draw_confirm_overlay(frame, confirm, frame.area());
+    }
 }
 
 fn draw_footer(frame: &mut Frame, _app: &mut App, layout: Rect) {

@@ -1,6 +1,10 @@
+use std::path::PathBuf;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum InputTarget {
     LibraryPath,
+    Rename { original_path: PathBuf },
+    NewPlaylist { parent_path: PathBuf },
     Search,
 }
 

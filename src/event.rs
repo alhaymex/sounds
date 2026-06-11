@@ -1,7 +1,7 @@
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
-use crate::app::{App, PlaybackStatus, Screen};
+use crate::app::{App, ConfirmAction, PlaybackStatus, Screen};
 use crate::audio::player::AudioPlayer;
 
 pub fn handle_key(
@@ -17,6 +17,22 @@ pub fn handle_key(
     }
 
     if key.kind != KeyEventKind::Press {
+        return Ok(());
+    }
+
+    if app.is_confirming() {
+        match key.code {
+            KeyCode::Char('y') => {
+                if let Some(confirm) = app.confirm.take() {
+                    match confirm {
+                        ConfirmAction::Delete { path, .. } => {
+                            app.delete_entry(&path)?;
+                        }
+                    }
+                }
+            }
+            _ => app.cancel_confirm(),
+        }
         return Ok(());
     }
 
@@ -53,11 +69,8 @@ pub fn handle_key(
             Screen::Help => {}
         },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
-
         KeyCode::Char('?') => app.toggle_help(),
-
         KeyCode::Char('o') => app.open_options(),
-
         KeyCode::Enter => match app.screen {
             Screen::Options => {
                 app.activate_selected_option()?;
@@ -73,7 +86,6 @@ pub fn handle_key(
 
             Screen::Help => {}
         },
-
         KeyCode::Char(' ') => {
             if app.playback.status != PlaybackStatus::Stopped {
                 audio_player.toggle_pause();
@@ -127,6 +139,22 @@ pub fn handle_key(
         KeyCode::Char('-') => {
             let volume = app.volume_down();
             audio_player.set_volume(volume);
+        }
+
+        // file manipulations
+        KeyCode::Char('r') => {
+            if matches!(app.screen, Screen::Library { .. }) {
+                app.start_rename();
+            }
+        }
+        KeyCode::Char('d') => {
+            if matches!(app.screen, Screen::Library { .. }) {
+                app.start_delete();
+            }
+        }
+        // NOTE: maybe change to only work from library screen?
+        KeyCode::Char('c') => {
+            app.start_new_playlist();
         }
 
         _ => {}

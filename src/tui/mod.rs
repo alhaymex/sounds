@@ -1,6 +1,7 @@
 pub mod help;
 pub mod library;
 pub mod options;
+pub mod overlay;
 pub mod player;
 pub mod theme;
 pub mod ui;

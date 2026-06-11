@@ -24,6 +24,10 @@ pub enum Screen {
     Help,
 }
 
+pub enum ConfirmAction {
+    Delete { path: PathBuf, name: String },
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlaybackStatus {
     Stopped,
@@ -80,6 +84,7 @@ pub struct App {
     pub config: Config,
     pub options: OptionsState,
     pub input: Option<TextInputState>,
+    pub confirm: Option<ConfirmAction>,
 }
 
 impl App {
@@ -110,6 +115,7 @@ impl App {
                     rain_enabled: settings.rain_enabled,
                 }
             },
+            confirm: None,
         })
     }
 
@@ -212,24 +218,6 @@ impl App {
         }
     }
 
-    pub fn current_playing_song_ids(&self) -> Vec<SongId> {
-        let Screen::Library { ref path, .. } = self.screen else {
-            return Vec::new();
-        };
-
-        let Some(root) = self.library.tree.as_ref() else {
-            return Vec::new();
-        };
-
-        let Some(node) = find_dir_by_path(root, path) else {
-            return Vec::new();
-        };
-
-        let mut songs = Vec::new();
-        collect_songs(node, &mut songs);
-        songs
-    }
-
     pub fn selected_song_id(&self) -> Option<SongId> {
         let Screen::Library { ref path, selected } = self.screen else {
             return None;
@@ -288,10 +276,13 @@ impl App {
             matches!(entry, DirEntry::Song { id, .. } if *id == current_id)
         })?;
 
-        entries[..current_idx].iter().find_map(|entry| match entry {
-            DirEntry::Song { id, .. } => Some(*id),
-            DirEntry::Dir { .. } => None,
-        })
+        entries[..current_idx]
+            .iter()
+            .rev()
+            .find_map(|entry| match entry {
+                DirEntry::Song { id, .. } => Some(*id),
+                DirEntry::Dir { .. } => None,
+            })
     }
 
     pub fn advance_to_song(&mut self, song_id: SongId) -> Option<PathBuf> {
@@ -467,6 +458,49 @@ impl App {
         self.input = Some(TextInputState::new(target, value))
     }
 
+    pub fn start_rename(&mut self) {
+        let Some((path, name)) = self.selected_entry_info() else {
+            return;
+        };
+
+        self.start_input(
+            InputTarget::Rename {
+                original_path: path,
+            },
+            name,
+        );
+    }
+
+    pub fn start_new_playlist(&mut self) {
+        let parent = match self.screen {
+            Screen::Library { ref path, .. } => path.clone(),
+            _ => self.library.root.clone(),
+        };
+
+        self.start_input(
+            InputTarget::NewPlaylist {
+                parent_path: parent,
+            },
+            "",
+        );
+    }
+
+    pub fn start_delete(&mut self) {
+        let Some((path, name)) = self.selected_entry_info() else {
+            return;
+        };
+
+        self.confirm = Some(ConfirmAction::Delete { path, name });
+    }
+
+    pub fn cancel_confirm(&mut self) {
+        self.confirm = None;
+    }
+
+    pub fn is_confirming(&self) -> bool {
+        self.confirm.is_some()
+    }
+
     pub fn cancel_input(&mut self) {
         self.input = None;
     }
@@ -493,9 +527,94 @@ impl App {
                 let dir = PathBuf::from(input.value.trim());
                 self.set_library_dir(dir)?;
             }
-            // TODO: search should be Search(SearchScope)
-            // we might add searching in multiple screens
             InputTarget::Search => {}
+            InputTarget::Rename { original_path } => {
+                if !input.value.trim().is_empty() {
+                    self.rename_entry(&original_path, &input.value)?;
+                }
+            }
+            InputTarget::NewPlaylist { parent_path } => {
+                if !input.value.trim().is_empty() {
+                    self.create_playlist(&parent_path, &input.value)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn rename_entry(
+        &mut self,
+        original: &Path,
+        new_name: &str,
+    ) -> Result<()> {
+        let new_name = new_name.trim();
+
+        let file_name = if original.is_file() {
+            match original.extension() {
+                Some(ext) => format!("{}.{}", new_name, ext.to_string_lossy()),
+                None => new_name.to_string(),
+            }
+        } else {
+            new_name.to_string()
+        };
+
+        let new_path = original.parent().unwrap_or(original).join(file_name);
+
+        fs::rename(original, &new_path).with_context(|| {
+            format!("failed to rename {}", original.display())
+        })?;
+
+        self.rescan_library()
+    }
+
+    pub fn create_playlist(&mut self, parent: &Path, name: &str) -> Result<()> {
+        let dir_path = parent.join(name.trim());
+
+        fs::create_dir_all(&dir_path).with_context(|| {
+            format!("failed to create playlist {}", dir_path.display())
+        })?;
+
+        self.rescan_library()
+    }
+
+    pub fn delete_entry(&mut self, path: &Path) -> Result<()> {
+        if path.is_dir() {
+            fs::remove_dir_all(path).with_context(|| {
+                format!("failed to delete directory {}", path.display())
+            })?;
+        } else {
+            fs::remove_file(path).with_context(|| {
+                format!("failed to delete file {}", path.display())
+            })?;
+        }
+
+        self.rescan_library()
+    }
+
+    pub fn rescan_library(&mut self) -> Result<()> {
+        let library = scan_library(&self.library.root).with_context(|| {
+            format!("failed to rescan library {}", self.library.root.display())
+        })?;
+        self.library = library;
+
+        let new_selected =
+            if let Screen::Library { ref path, selected } = self.screen {
+                let path = path.clone();
+                let count = self.dir_entries(&path).len();
+                if selected >= count && count > 0 {
+                    Some(count - 1)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
+        if let (Some(new), Screen::Library { selected, .. }) =
+            (new_selected, &mut self.screen)
+        {
+            *selected = new;
         }
 
         Ok(())
@@ -520,15 +639,11 @@ impl App {
                 Node::Dir { name, path, .. } => {
                     let song_count = count_songs(child);
 
-                    if song_count > 0 {
-                        Some(DirEntry::Dir {
-                            name: name.clone(),
-                            path: path.clone(),
-                            song_count,
-                        })
-                    } else {
-                        None
-                    }
+                    Some(DirEntry::Dir {
+                        name: name.clone(),
+                        path: path.clone(),
+                        song_count,
+                    })
                 }
                 Node::Song { id } => {
                     let title = self
@@ -550,17 +665,24 @@ impl App {
 
         entries
     }
-}
 
-fn collect_songs(node: &Node, songs: &mut Vec<SongId>) {
-    match node {
-        Node::Dir { children, .. } => {
-            for child in children {
-                collect_songs(child, songs);
+    pub fn selected_entry_info(&self) -> Option<(PathBuf, String)> {
+        let Screen::Library { ref path, selected } = self.screen else {
+            return None;
+        };
+
+        let path = path.clone();
+        let entries = self.dir_entries(&path);
+        let entry = entries.get(selected)?;
+
+        match entry {
+            DirEntry::Dir { name, path, .. } => {
+                Some((path.clone(), name.clone()))
             }
-        }
-        Node::Song { id } => {
-            songs.push(*id);
+            DirEntry::Song { id, title } => {
+                let song_path = self.library.index.get(*id)?.path.clone();
+                Some((song_path, title.clone()))
+            }
         }
     }
 }
