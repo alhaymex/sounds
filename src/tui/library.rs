@@ -26,7 +26,7 @@ pub fn draw_library(frame: &mut Frame, app: &mut App, area: Rect) {
             DirEntry::Dir {
                 name, song_count, ..
             } => ListItem::new(Line::from(format!(
-                "📁 {} ({})",
+                "▸ {} ({})",
                 name, song_count
             ))),
             DirEntry::Song { id, title } => {
