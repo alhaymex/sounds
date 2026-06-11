@@ -288,10 +288,13 @@ impl App {
             matches!(entry, DirEntry::Song { id, .. } if *id == current_id)
         })?;
 
-        entries[..current_idx].iter().find_map(|entry| match entry {
-            DirEntry::Song { id, .. } => Some(*id),
-            DirEntry::Dir { .. } => None,
-        })
+        entries[..current_idx]
+            .iter()
+            .rev()
+            .find_map(|entry| match entry {
+                DirEntry::Song { id, .. } => Some(*id),
+                DirEntry::Dir { .. } => None,
+            })
     }
 
     pub fn advance_to_song(&mut self, song_id: SongId) -> Option<PathBuf> {
