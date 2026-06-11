@@ -274,6 +274,26 @@ impl App {
             })
     }
 
+    pub fn prev_song_id(&self) -> Option<SongId> {
+        let current_id = self.playback.current_song?;
+
+        let Screen::Library { ref path, .. } = self.screen else {
+            return None;
+        };
+
+        let path = path.clone();
+        let entries = self.dir_entries(&path);
+
+        let current_idx = entries.iter().position(|entry| {
+            matches!(entry, DirEntry::Song { id, .. } if *id == current_id)
+        })?;
+
+        entries[..current_idx].iter().find_map(|entry| match entry {
+            DirEntry::Song { id, .. } => Some(*id),
+            DirEntry::Dir { .. } => None,
+        })
+    }
+
     pub fn advance_to_song(&mut self, song_id: SongId) -> Option<PathBuf> {
         let path = self.library.index.get(song_id)?.path.clone();
 

@@ -95,6 +95,17 @@ pub fn handle_key(
                 }
             }
         }
+        KeyCode::Char('p') => {
+            if let Some(prev_id) = app.prev_song_id() {
+                if let Some(path) = app.advance_to_song(prev_id) {
+                    audio_player.play(&path)?;
+                    app.sync_playback_time(
+                        audio_player.position(),
+                        audio_player.duration(),
+                    );
+                }
+            }
+        }
         KeyCode::Right | KeyCode::Char('l') => {
             audio_player.seek_forward()?;
             app.sync_playback_time(
