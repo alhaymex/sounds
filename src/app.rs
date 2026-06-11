@@ -530,12 +530,12 @@ impl App {
             InputTarget::Search => {}
             InputTarget::Rename { original_path } => {
                 if !input.value.trim().is_empty() {
-                    self.rename_entry(&original_path, &input.value);
+                    self.rename_entry(&original_path, &input.value)?;
                 }
             }
             InputTarget::NewPlaylist { parent_path } => {
                 if !input.value.trim().is_empty() {
-                    self.create_playlist(&parent_path, &input.value);
+                    self.create_playlist(&parent_path, &input.value)?;
                 }
             }
         }
@@ -629,15 +629,15 @@ impl App {
                 Node::Dir { name, path, .. } => {
                     let song_count = count_songs(child);
 
-                    if song_count > 0 {
-                        Some(DirEntry::Dir {
-                            name: name.clone(),
-                            path: path.clone(),
-                            song_count,
-                        })
-                    } else {
-                        None
-                    }
+                    // if song_count > 0 {
+                    Some(DirEntry::Dir {
+                        name: name.clone(),
+                        path: path.clone(),
+                        song_count,
+                    })
+                    // } else {
+                    //     None
+                    // }
                 }
                 Node::Song { id } => {
                     let title = self
