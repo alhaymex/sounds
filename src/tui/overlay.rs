@@ -3,9 +3,7 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{
-        Block, Borders, Clear, List, ListItem, ListState, Padding, Paragraph,
-    },
+    widgets::{Block, Borders, Clear, Padding, Paragraph},
 };
 
 use crate::{

@@ -548,8 +548,18 @@ impl App {
         original: &Path,
         new_name: &str,
     ) -> Result<()> {
-        let new_path =
-            original.parent().unwrap_or(original).join(new_name.trim());
+        let new_name = new_name.trim();
+
+        let file_name = if original.is_file() {
+            match original.extension() {
+                Some(ext) => format!("{}.{}", new_name, ext.to_string_lossy()),
+                None => new_name.to_string(),
+            }
+        } else {
+            new_name.to_string()
+        };
+
+        let new_path = original.parent().unwrap_or(original).join(file_name);
 
         fs::rename(original, &new_path).with_context(|| {
             format!("failed to rename {}", original.display())
@@ -629,15 +639,11 @@ impl App {
                 Node::Dir { name, path, .. } => {
                     let song_count = count_songs(child);
 
-                    // if song_count > 0 {
                     Some(DirEntry::Dir {
                         name: name.clone(),
                         path: path.clone(),
                         song_count,
                     })
-                    // } else {
-                    //     None
-                    // }
                 }
                 Node::Song { id } => {
                     let title = self
@@ -677,19 +683,6 @@ impl App {
                 let song_path = self.library.index.get(*id)?.path.clone();
                 Some((song_path, title.clone()))
             }
-        }
-    }
-}
-
-fn collect_songs(node: &Node, songs: &mut Vec<SongId>) {
-    match node {
-        Node::Dir { children, .. } => {
-            for child in children {
-                collect_songs(child, songs);
-            }
-        }
-        Node::Song { id } => {
-            songs.push(*id);
         }
     }
 }
