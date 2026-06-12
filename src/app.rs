@@ -23,7 +23,7 @@ const DEFAULT_PLAYLISTS: &[&str] = &["Favorites", "Archive"];
 pub enum Screen {
     Library { path: PathBuf, selected: usize },
     Options,
-    Help,
+    Help { selected: usize },
 }
 
 pub enum ConfirmAction {
@@ -41,9 +41,10 @@ pub struct PlaybackState {
     pub selected_song: Option<SongId>,
     pub current_song: Option<SongId>,
     pub status: PlaybackStatus,
-    pub volume: u8,
     pub position: Duration,
     pub duration: Option<Duration>,
+    pub volume: u8,
+    pub speed_index: usize,
 }
 
 impl Default for PlaybackState {
@@ -55,6 +56,7 @@ impl Default for PlaybackState {
             volume: 75,
             position: Duration::ZERO,
             duration: None,
+            speed_index: 2,
         }
     }
 }
@@ -210,7 +212,7 @@ impl App {
                     self.screen = prev;
                 }
             }
-            Screen::Options | Screen::Help => {
+            Screen::Options | Screen::Help { .. } => {
                 if let Some(prev) = self.navigation_stack.pop() {
                     self.screen = prev;
                 } else {
@@ -443,13 +445,13 @@ impl App {
     }
 
     pub fn toggle_help(&mut self) {
-        if self.screen == Screen::Help {
+        if matches!(self.screen, Screen::Help { .. }) {
             if let Some(prev) = self.navigation_stack.pop() {
                 self.screen = prev;
             }
         } else {
             self.navigation_stack.push(self.screen.clone());
-            self.screen = Screen::Help;
+            self.screen = Screen::Help { selected: 0 };
         }
     }
 
