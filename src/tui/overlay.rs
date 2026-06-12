@@ -28,7 +28,7 @@ pub fn draw_input_overlay(
     let content = Line::from(vec![
         Span::raw(&input.value),
         Span::styled(
-            "█",
+            "▌",
             Style::default()
                 .fg(Color::LightBlue)
                 .add_modifier(Modifier::RAPID_BLINK),
