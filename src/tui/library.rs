@@ -25,10 +25,9 @@ pub fn draw_library(frame: &mut Frame, app: &mut App, area: Rect) {
         .map(|entry| match entry {
             DirEntry::Dir {
                 name, song_count, ..
-            } => ListItem::new(Line::from(format!(
-                "▸ {} ({})",
-                name, song_count
-            ))),
+            } => {
+                ListItem::new(Line::from(format!("{} ({})", name, song_count)))
+            }
             DirEntry::Song { id, title } => {
                 let is_current = app.playback.current_song == Some(*id);
                 let item = ListItem::new(Line::from(format!("♪ {}", title)));
