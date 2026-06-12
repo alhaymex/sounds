@@ -17,6 +17,8 @@ use crate::{
     system::settings::{Settings, default_library_dir},
 };
 
+const DEFAULT_PLAYLISTS: &[&str] = &["Favorites", "Archive"];
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Screen {
     Library { path: PathBuf, selected: usize },
@@ -95,6 +97,9 @@ impl App {
             .library_dir
             .or_else(default_library_dir)
             .unwrap_or_else(|| PathBuf::from("."));
+
+        // Create default playlists
+        ensure_default_playlists(&library_dir)?;
 
         let library = scan_library(&library_dir)?;
 
@@ -416,6 +421,8 @@ impl App {
             })?;
         }
 
+        ensure_default_playlists(&dir)?;
+
         let library = scan_library(&dir).with_context(|| {
             format!("failed to scan directory {}", dir.display())
         })?;
@@ -463,6 +470,10 @@ impl App {
             return;
         };
 
+        if self.is_default_path(&path) {
+            return;
+        }
+
         self.start_input(
             InputTarget::Rename {
                 original_path: path,
@@ -489,6 +500,10 @@ impl App {
         let Some((path, name)) = self.selected_entry_info() else {
             return;
         };
+
+        if self.is_default_path(&path) {
+            return;
+        }
 
         self.confirm = Some(ConfirmAction::Delete { path, name });
     }
@@ -579,6 +594,10 @@ impl App {
     }
 
     pub fn delete_entry(&mut self, path: &Path) -> Result<()> {
+        if self.is_default_path(path) {
+            bail!("cannot delete default playlists");
+        }
+
         if path.is_dir() {
             fs::remove_dir_all(path).with_context(|| {
                 format!("failed to delete directory {}", path.display())
@@ -593,6 +612,8 @@ impl App {
     }
 
     pub fn rescan_library(&mut self) -> Result<()> {
+        ensure_default_playlists(&self.library.root)?;
+
         let library = scan_library(&self.library.root).with_context(|| {
             format!("failed to rescan library {}", self.library.root.display())
         })?;
@@ -685,6 +706,17 @@ impl App {
             }
         }
     }
+
+    pub fn is_default_path(&self, path: &Path) -> bool {
+        for p in DEFAULT_PLAYLISTS {
+            let protected = self.library.root.join(p);
+            if path == protected {
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
 fn count_songs(node: &Node) -> usize {
@@ -692,4 +724,18 @@ fn count_songs(node: &Node) -> usize {
         Node::Dir { children, .. } => children.iter().map(count_songs).sum(),
         Node::Song { .. } => 1,
     }
+}
+
+fn ensure_default_playlists(root: &Path) -> Result<()> {
+    for playlist in DEFAULT_PLAYLISTS {
+        let path = root.join(playlist);
+
+        if !path.exists() {
+            fs::create_dir_all(&path).with_context(|| {
+                format!("failed to create playlist {}", path.display())
+            })?;
+        }
+    }
+
+    Ok(())
 }
