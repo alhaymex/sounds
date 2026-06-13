@@ -3,17 +3,31 @@ use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::app::{App, ConfirmAction, PlaybackStatus, Screen};
 use crate::audio::player::AudioPlayer;
+use crate::tui::toast::{Toast, ToastKind};
 
 pub fn handle_key(
     key: KeyEvent,
     app: &mut App,
     audio_player: &mut AudioPlayer,
 ) -> Result<()> {
-    if key.modifiers.contains(KeyModifiers::CONTROL)
-        && matches!(key.code, KeyCode::Char('c'))
-    {
-        app.quit();
-        return Ok(());
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Char('c') => {
+                app.quit();
+                return Ok(());
+            }
+            KeyCode::Char('r') => {
+                let scanning_id = app.push_toast(Toast::persistent(
+                    "Scanning library…",
+                    ToastKind::Info,
+                ));
+                app.rescan_library()?;
+                app.dismiss_toast(scanning_id);
+                app.push_toast(Toast::success("Library scanned"));
+                return Ok(());
+            }
+            _ => {}
+        }
     }
 
     if key.kind != KeyEventKind::Press {
@@ -26,6 +40,16 @@ pub fn handle_key(
                 if let Some(confirm) = app.confirm.take() {
                     match confirm {
                         ConfirmAction::Delete { path, .. } => {
+                            if app
+                                .playback
+                                .current_song
+                                .and_then(|id| app.library.index.get(id))
+                                .map(|song| song.path == path)
+                                .unwrap_or(false)
+                            {
+                                audio_player.stop();
+                                app.stop_playback();
+                            }
                             app.delete_entry(&path)?;
                         }
                     }

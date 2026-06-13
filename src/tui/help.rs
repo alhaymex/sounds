@@ -155,6 +155,9 @@ pub fn help_items() -> Vec<HelpItem> {
             key_inline("[q]      "),
             muted(" Quit"),
         ])),
+        HelpItem::Spacer,
+        HelpItem::Spacer,
+        HelpItem::Spacer,
     ]
 }
 
