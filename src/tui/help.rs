@@ -113,7 +113,8 @@ pub fn draw_help_screen(frame: &mut Frame, app: &mut App, area: Rect) {
                 .title(" HELP ")
                 .padding(Padding::horizontal(2)),
         )
-        .highlight_style(Style::default());
+        .highlight_style(Style::default())
+        .highlight_symbol("▶  ");
 
     let selected = match app.screen {
         Screen::Help { selected } => selected,

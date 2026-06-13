@@ -57,7 +57,7 @@ pub fn handle_key(
             Screen::Options => {
                 app.options_down();
             }
-            Screen::Help { .. } => {}
+            Screen::Help { .. } => app.help_down(),
         },
         KeyCode::Up | KeyCode::Char('k') => match app.screen {
             Screen::Library { .. } => {
@@ -66,7 +66,7 @@ pub fn handle_key(
             Screen::Options => {
                 app.options_up();
             }
-            Screen::Help { .. } => {}
+            Screen::Help { .. } => app.help_up(),
         },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
         KeyCode::Char('?') => app.toggle_help(),

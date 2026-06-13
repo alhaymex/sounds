@@ -387,6 +387,24 @@ impl App {
         self.options.move_up();
     }
 
+    // IMPORTANT
+    // TODO: remove the hardcoded length (28)
+    pub fn help_down(&mut self) {
+        if let Screen::Help { selected } = &mut self.screen {
+            *selected = (*selected + 1) % 28;
+        }
+    }
+
+    pub fn help_up(&mut self) {
+        if let Screen::Help { selected } = &mut self.screen {
+            *selected = if *selected == 0 {
+                28 - 1
+            } else {
+                *selected - 1
+            };
+        }
+    }
+
     pub fn activate_selected_option(&mut self) -> Result<()> {
         match self.options.selected_item() {
             OptionsItem::LibraryPath => {
