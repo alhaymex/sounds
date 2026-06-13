@@ -25,6 +25,8 @@ struct CLI {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Ceck app version
+    Version,
     /// Update to the latest version
     Update,
 }
@@ -33,6 +35,12 @@ fn main() -> Result<()> {
     let cli = CLI::parse();
 
     match cli.command {
+        Some(Command::Version) => {
+            println!(
+                "sounds v{}\n\n\tA filesystem-first audio player for the terminal\n\thttps://github.com/alhaymex/sounds\n",
+                env!("CARGO_PKG_VERSION")
+            );
+        }
         Some(Command::Update) => {
             update()?;
         }
