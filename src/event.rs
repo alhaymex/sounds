@@ -162,9 +162,10 @@ pub fn handle_key(
                 app.start_delete();
             }
         }
-        // NOTE: maybe change to only work from library screen?
         KeyCode::Char('c') => {
-            app.start_new_playlist();
+            if matches!(app.screen, Screen::Library { .. }) {
+                app.start_new_playlist();
+            }
         }
 
         _ => {}

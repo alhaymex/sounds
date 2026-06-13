@@ -393,7 +393,6 @@ impl App {
         self.options.move_up();
     }
 
-    // IMPORTANT
     pub fn help_down(&mut self) {
         let len = self.help_len();
 
