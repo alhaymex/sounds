@@ -9,16 +9,25 @@ pub fn handle_key(
     app: &mut App,
     audio_player: &mut AudioPlayer,
 ) -> Result<()> {
-    if key.modifiers.contains(KeyModifiers::CONTROL)
-        && matches!(key.code, KeyCode::Char('c'))
-    {
-        app.quit();
-        return Ok(());
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Char('c') => {
+                app.quit();
+                return Ok(());
+            }
+            KeyCode::Char('r') => {
+                app.rescan_library()?;
+                return Ok(());
+            }
+            _ => {}
+        }
     }
 
     if key.kind != KeyEventKind::Press {
         return Ok(());
     }
+
+    // Add Ctrl + R to manully rescan_dir
 
     if app.is_confirming() {
         match key.code {
@@ -26,6 +35,16 @@ pub fn handle_key(
                 if let Some(confirm) = app.confirm.take() {
                     match confirm {
                         ConfirmAction::Delete { path, .. } => {
+                            if app
+                                .playback
+                                .current_song
+                                .and_then(|id| app.library.index.get(id))
+                                .map(|song| song.path == path)
+                                .unwrap_or(false)
+                            {
+                                audio_player.stop();
+                                app.stop_playback();
+                            }
                             app.delete_entry(&path)?;
                         }
                     }
