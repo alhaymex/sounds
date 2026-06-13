@@ -101,6 +101,7 @@ pub fn handle_key(
             if let Some(next_id) = app.next_song_id() {
                 if let Some(path) = app.advance_to_song(next_id) {
                     audio_player.play(&path)?;
+                    app.sync_speed(audio_player.speed_index());
                     app.sync_playback_time(
                         audio_player.position(),
                         audio_player.duration(),
@@ -112,6 +113,7 @@ pub fn handle_key(
             if let Some(prev_id) = app.prev_song_id() {
                 if let Some(path) = app.advance_to_song(prev_id) {
                     audio_player.play(&path)?;
+                    app.sync_speed(audio_player.speed_index());
                     app.sync_playback_time(
                         audio_player.position(),
                         audio_player.duration(),
@@ -130,6 +132,7 @@ pub fn handle_key(
 
         KeyCode::Right | KeyCode::Char('l') => {
             audio_player.seek_forward()?;
+            app.sync_speed(audio_player.speed_index());
             app.sync_playback_time(
                 audio_player.position(),
                 audio_player.duration(),
@@ -137,6 +140,7 @@ pub fn handle_key(
         }
         KeyCode::Left | KeyCode::Char('h') => {
             audio_player.seek_backward()?;
+            app.sync_speed(audio_player.speed_index());
             app.sync_playback_time(
                 audio_player.position(),
                 audio_player.duration(),
@@ -185,6 +189,7 @@ fn play_selected_song(
 
     audio_player.play(&path)?;
     app.mark_selected_song_playing();
+    app.sync_speed(audio_player.speed_index());
     app.sync_playback_time(audio_player.position(), audio_player.duration());
 
     Ok(())
