@@ -3,6 +3,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::app::{App, ConfirmAction, PlaybackStatus, Screen};
 use crate::audio::player::AudioPlayer;
+use crate::tui::toast::{Toast, ToastKind};
 
 pub fn handle_key(
     key: KeyEvent,
@@ -16,7 +17,13 @@ pub fn handle_key(
                 return Ok(());
             }
             KeyCode::Char('r') => {
+                let scanning_id = app.push_toast(Toast::persistent(
+                    "Scanning library…",
+                    ToastKind::Info,
+                ));
                 app.rescan_library()?;
+                app.dismiss_toast(scanning_id);
+                app.push_toast(Toast::success("Library scanned"));
                 return Ok(());
             }
             _ => {}
@@ -26,8 +33,6 @@ pub fn handle_key(
     if key.kind != KeyEventKind::Press {
         return Ok(());
     }
-
-    // Add Ctrl + R to manully rescan_dir
 
     if app.is_confirming() {
         match key.code {

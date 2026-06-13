@@ -12,7 +12,7 @@ use crate::{
         scan::{find_dir_by_path, scan_library},
     },
     system::settings::{Settings, default_library_dir},
-    tui::help::help_items,
+    tui::{help::help_items, toast::Toast},
 };
 use crate::{
     state::{
@@ -95,6 +95,8 @@ pub struct App {
     pub input: Option<TextInputState>,
     pub confirm: Option<ConfirmAction>,
     pub help_items: Vec<HelpItem>,
+    pub toasts: Vec<Toast>,
+    toast_id_counter: u64,
 }
 
 impl App {
@@ -130,6 +132,8 @@ impl App {
             },
             confirm: None,
             help_items: help_items(),
+            toasts: Vec::new(),
+            toast_id_counter: 0,
         })
     }
 
@@ -767,19 +771,19 @@ impl App {
             .count()
     }
 
-    fn help_entry_index(&self, selected: usize) -> usize {
-        let mut count = 0;
+    pub fn push_toast(&mut self, mut toast: Toast) -> u64 {
+        self.toast_id_counter += 1;
+        toast.id = self.toast_id_counter;
+        self.toasts.push(toast);
+        self.toast_id_counter
+    }
 
-        for (i, item) in self.help_items.iter().enumerate() {
-            if matches!(item, HelpItem::Entry(_)) {
-                if count == selected {
-                    return i;
-                }
-                count += 1;
-            }
-        }
+    pub fn tick_toasts(&mut self) {
+        self.toasts.retain(|t| !t.is_expired());
+    }
 
-        0
+    pub fn dismiss_toast(&mut self, id: u64) {
+        self.toasts.retain(|t| t.id != id);
     }
 }
 

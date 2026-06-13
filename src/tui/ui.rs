@@ -5,6 +5,7 @@ use ratatui::{
 };
 
 use crate::tui::{
+    draw_toast::draw_toasts,
     help::draw_help_screen,
     library::draw_library,
     options::draw_options_screen,
@@ -54,6 +55,8 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     if let Some(confirm) = &app.confirm {
         draw_confirm_overlay(frame, confirm, frame.area());
     }
+
+    draw_toasts(frame, app);
 }
 
 fn draw_footer(frame: &mut Frame, _app: &mut App, layout: Rect) {

@@ -1,9 +1,11 @@
+pub mod draw_toast;
 pub mod help;
 pub mod library;
 pub mod options;
 pub mod overlay;
 pub mod player;
 pub mod theme;
+pub mod toast;
 pub mod ui;
 
 use std::io;
@@ -52,6 +54,7 @@ pub fn run(mut app: App) -> Result<()> {
 
     while !app.should_quit {
         app.tick = app.tick.wrapping_add(1);
+        app.tick_toasts();
 
         app.sync_speed(audio_player.speed_index());
         app.sync_playback_time(
