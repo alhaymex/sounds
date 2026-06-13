@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::{
     app::{App, Screen},
-    tui::theme::{CONTENT_MAX_WIDTH, center_area, key_inline, muted, title},
+    tui::theme::{CONTENT_MAX_WIDTH, key_inline, muted, title},
 };
 
 pub enum HelpItem {
