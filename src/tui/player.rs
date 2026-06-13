@@ -7,8 +7,11 @@ use ratatui::{
     text::{Line, Span},
 };
 
-use crate::app::{App, PlaybackStatus};
 use crate::tui::theme::{CONTENT_MAX_WIDTH, center_area, muted};
+use crate::{
+    app::{App, PlaybackStatus},
+    audio::player::SPEEDS,
+};
 
 pub fn draw_player(frame: &mut Frame, app: &App, area: Rect) {
     let [info_area, bar_area] =
@@ -58,23 +61,62 @@ fn draw_player_info(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(title.centered(), title_area);
 
     let metadata = if let Some(song) = current_song {
-        let artist =
-            song.metadata.artist.as_deref().unwrap_or("Unknown Artist");
+        let artist = song.metadata.artist.as_deref();
+        let album = song.metadata.album.as_deref();
+        let speed = SPEEDS[app.playback.speed_index];
+        let speed_span = if (speed - 1.0).abs() < f32::EPSILON {
+            muted(format!("{}×", speed))
+        } else {
+            Span::styled(
+                format!("{}×", speed),
+                Style::default().fg(Color::Yellow),
+            )
+        };
 
-        let album = song.metadata.album.as_deref().unwrap_or("Unknown Album");
+        let mut spans: Vec<Span> = Vec::new();
 
-        Line::from(vec![
-            muted(artist),
-            muted(" • "),
-            muted(album),
-            muted(" • "),
-            muted(format!("Volume {}%", app.playback.volume)),
-        ])
+        match (artist, album) {
+            (Some(a), Some(b)) => {
+                spans.push(muted(a));
+                spans.push(muted(" • "));
+                spans.push(muted(b));
+                spans.push(muted(" • "));
+            }
+            (Some(a), None) => {
+                spans.push(muted(a));
+                spans.push(muted(" • "));
+            }
+            (None, Some(b)) => {
+                spans.push(muted(b));
+                spans.push(muted(" • "));
+            }
+            (None, None) => {
+                spans.push(muted("No metadata"));
+                spans.push(muted(" • "));
+            }
+        }
+
+        spans.push(muted(format!("Volume {}%", app.playback.volume)));
+        spans.push(muted(" • "));
+        spans.push(speed_span);
+
+        Line::from(spans)
     } else {
+        let speed = SPEEDS[app.playback.speed_index];
+        let speed_span = if (speed - 1.0).abs() < f32::EPSILON {
+            muted(format!("{}×", speed))
+        } else {
+            Span::styled(
+                format!("{}×", speed),
+                Style::default().fg(Color::Yellow),
+            )
+        };
         Line::from(vec![
             muted("No metadata"),
             muted(" • "),
             muted(format!("Volume {}%", app.playback.volume)),
+            muted(" • "),
+            speed_span,
         ])
     };
 
