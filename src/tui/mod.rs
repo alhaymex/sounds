@@ -53,6 +53,7 @@ pub fn run(mut app: App) -> Result<()> {
     while !app.should_quit {
         app.tick = app.tick.wrapping_add(1);
 
+        app.sync_speed(audio_player.speed_index());
         app.sync_playback_time(
             audio_player.position(),
             audio_player.duration(),

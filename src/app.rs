@@ -6,6 +6,7 @@ use std::{
 };
 
 use crate::{
+    audio::player::SPEEDS,
     library::{
         model::{Library, Node, SongId},
         scan::{find_dir_by_path, scan_library},
@@ -341,8 +342,13 @@ impl App {
         position: Duration,
         duration: Option<Duration>,
     ) {
-        self.playback.position = position;
+        let speed = SPEEDS[self.playback.speed_index];
+        self.playback.position = position.mul_f32(speed);
         self.playback.duration = duration;
+    }
+
+    pub fn sync_speed(&mut self, speed_index: usize) {
+        self.playback.speed_index = speed_index;
     }
 
     pub fn stop_playback(&mut self) {
