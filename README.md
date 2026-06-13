@@ -73,7 +73,7 @@ This opens the TUI where you can browse and play your music. Press `?` for keybi
 - [x] Navigate screen history by changing `prev_screen: Screen` to a `Vec<Screen>`
 - [x] Auto-play next song
 - [x] Add simple, scoped file manipulation (e.g. rename a playlist or a song)
-- [ ] Audio playack speed controls
+- [x] Audio playack speed controls
 - [ ] Search
 - [ ] YouTube integration via yt-dlp
 - [ ] macOS support

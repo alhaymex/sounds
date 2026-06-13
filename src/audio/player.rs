@@ -7,12 +7,15 @@ use std::{
 use anyhow::{Context, Result};
 use rodio::{Decoder, DeviceSinkBuilder, MixerDeviceSink, Player, Source};
 
+const SPEEDS: &[f32] = &[0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+
 pub struct AudioPlayer {
     sink: MixerDeviceSink,
     player: Player,
     current_path: Option<PathBuf>,
     current_duration: Option<Duration>,
     volume: u8,
+    speed_index: usize,
 }
 
 impl AudioPlayer {
@@ -28,6 +31,7 @@ impl AudioPlayer {
             current_path: None,
             current_duration: None,
             volume: 75,
+            speed_index: 2,
         })
     }
 
@@ -53,6 +57,7 @@ impl AudioPlayer {
 
         // Re-apply persisted volume before playing.
         self.player.set_volume(self.volume_as_f32());
+        self.player.set_speed(self.speed());
 
         self.player.play();
 
@@ -124,6 +129,24 @@ impl AudioPlayer {
 
     pub fn is_finished(&self) -> bool {
         self.current_path.is_some() && self.player.empty()
+    }
+
+    pub fn speed(&self) -> f32 {
+        SPEEDS[self.speed_index]
+    }
+
+    pub fn speed_index(&self) -> usize {
+        self.speed_index
+    }
+
+    pub fn increase_speed(&mut self) {
+        self.speed_index = (self.speed_index + 1).min(SPEEDS.len() - 1);
+        self.player.set_speed(self.speed());
+    }
+
+    pub fn decrease_speed(&mut self) {
+        self.speed_index = self.speed_index.saturating_sub(1);
+        self.player.set_speed(self.speed());
     }
 
     fn volume_as_f32(&self) -> f32 {

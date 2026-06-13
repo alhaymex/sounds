@@ -5,16 +5,20 @@ use std::{
     time::Duration,
 };
 
-use crate::state::{
-    input::{InputTarget, TextInputState},
-    options::{OptionsItem, OptionsState},
-};
 use crate::{
     library::{
         model::{Library, Node, SongId},
         scan::{find_dir_by_path, scan_library},
     },
     system::settings::{Settings, default_library_dir},
+    tui::help::help_items,
+};
+use crate::{
+    state::{
+        input::{InputTarget, TextInputState},
+        options::{OptionsItem, OptionsState},
+    },
+    tui::help::HelpItem,
 };
 
 const DEFAULT_PLAYLISTS: &[&str] = &["Favorites", "Archive"];
@@ -23,7 +27,7 @@ const DEFAULT_PLAYLISTS: &[&str] = &["Favorites", "Archive"];
 pub enum Screen {
     Library { path: PathBuf, selected: usize },
     Options,
-    Help,
+    Help { selected: usize },
 }
 
 pub enum ConfirmAction {
@@ -41,9 +45,10 @@ pub struct PlaybackState {
     pub selected_song: Option<SongId>,
     pub current_song: Option<SongId>,
     pub status: PlaybackStatus,
-    pub volume: u8,
     pub position: Duration,
     pub duration: Option<Duration>,
+    pub volume: u8,
+    pub speed_index: usize,
 }
 
 impl Default for PlaybackState {
@@ -55,6 +60,7 @@ impl Default for PlaybackState {
             volume: 75,
             position: Duration::ZERO,
             duration: None,
+            speed_index: 2,
         }
     }
 }
@@ -87,6 +93,7 @@ pub struct App {
     pub options: OptionsState,
     pub input: Option<TextInputState>,
     pub confirm: Option<ConfirmAction>,
+    pub help_items: Vec<HelpItem>,
 }
 
 impl App {
@@ -121,6 +128,7 @@ impl App {
                 }
             },
             confirm: None,
+            help_items: help_items(),
         })
     }
 
@@ -210,7 +218,7 @@ impl App {
                     self.screen = prev;
                 }
             }
-            Screen::Options | Screen::Help => {
+            Screen::Options | Screen::Help { .. } => {
                 if let Some(prev) = self.navigation_stack.pop() {
                     self.screen = prev;
                 } else {
@@ -385,6 +393,35 @@ impl App {
         self.options.move_up();
     }
 
+    // IMPORTANT
+    pub fn help_down(&mut self) {
+        let len = self.help_len();
+
+        if len == 0 {
+            return;
+        }
+
+        if let Screen::Help { selected } = &mut self.screen {
+            *selected = (*selected + 1) % len;
+        }
+    }
+
+    pub fn help_up(&mut self) {
+        let len = self.help_len();
+
+        if len == 0 {
+            return;
+        }
+
+        if let Screen::Help { selected } = &mut self.screen {
+            *selected = if *selected == 0 {
+                len - 1
+            } else {
+                *selected - 1
+            };
+        }
+    }
+
     pub fn activate_selected_option(&mut self) -> Result<()> {
         match self.options.selected_item() {
             OptionsItem::LibraryPath => {
@@ -443,13 +480,13 @@ impl App {
     }
 
     pub fn toggle_help(&mut self) {
-        if self.screen == Screen::Help {
+        if matches!(self.screen, Screen::Help { .. }) {
             if let Some(prev) = self.navigation_stack.pop() {
                 self.screen = prev;
             }
         } else {
             self.navigation_stack.push(self.screen.clone());
-            self.screen = Screen::Help;
+            self.screen = Screen::Help { selected: 0 };
         }
     }
 
@@ -716,6 +753,28 @@ impl App {
         }
 
         false
+    }
+
+    fn help_len(&self) -> usize {
+        self.help_items
+            .iter()
+            .filter(|item| matches!(item, HelpItem::Entry(_)))
+            .count()
+    }
+
+    fn help_entry_index(&self, selected: usize) -> usize {
+        let mut count = 0;
+
+        for (i, item) in self.help_items.iter().enumerate() {
+            if matches!(item, HelpItem::Entry(_)) {
+                if count == selected {
+                    return i;
+                }
+                count += 1;
+            }
+        }
+
+        0
     }
 }
 

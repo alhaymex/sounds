@@ -41,7 +41,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
             draw_library(frame, app, body);
         }
         Screen::Options => draw_options_screen(frame, app, body),
-        Screen::Help => draw_help_screen(frame, app, body),
+        Screen::Help { .. } => draw_help_screen(frame, app, body),
     }
 
     draw_player(frame, app, player);

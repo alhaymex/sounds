@@ -57,7 +57,7 @@ pub fn handle_key(
             Screen::Options => {
                 app.options_down();
             }
-            Screen::Help => {}
+            Screen::Help { .. } => app.help_down(),
         },
         KeyCode::Up | KeyCode::Char('k') => match app.screen {
             Screen::Library { .. } => {
@@ -66,7 +66,7 @@ pub fn handle_key(
             Screen::Options => {
                 app.options_up();
             }
-            Screen::Help => {}
+            Screen::Help { .. } => app.help_up(),
         },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
         KeyCode::Char('?') => app.toggle_help(),
@@ -84,8 +84,9 @@ pub fn handle_key(
                 }
             }
 
-            Screen::Help => {}
+            Screen::Help { .. } => {}
         },
+
         KeyCode::Char(' ') => {
             if app.playback.status != PlaybackStatus::Stopped {
                 audio_player.toggle_pause();
@@ -118,6 +119,15 @@ pub fn handle_key(
                 }
             }
         }
+        KeyCode::Char('>') => {
+            audio_player.increase_speed();
+            app.playback.speed_index = audio_player.speed_index();
+        }
+        KeyCode::Char('<') => {
+            audio_player.decrease_speed();
+            app.playback.speed_index = audio_player.speed_index();
+        }
+
         KeyCode::Right | KeyCode::Char('l') => {
             audio_player.seek_forward()?;
             app.sync_playback_time(
