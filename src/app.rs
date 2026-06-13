@@ -5,16 +5,20 @@ use std::{
     time::Duration,
 };
 
-use crate::state::{
-    input::{InputTarget, TextInputState},
-    options::{OptionsItem, OptionsState},
-};
 use crate::{
     library::{
         model::{Library, Node, SongId},
         scan::{find_dir_by_path, scan_library},
     },
     system::settings::{Settings, default_library_dir},
+    tui::help::help_items,
+};
+use crate::{
+    state::{
+        input::{InputTarget, TextInputState},
+        options::{OptionsItem, OptionsState},
+    },
+    tui::help::HelpItem,
 };
 
 const DEFAULT_PLAYLISTS: &[&str] = &["Favorites", "Archive"];
@@ -89,6 +93,7 @@ pub struct App {
     pub options: OptionsState,
     pub input: Option<TextInputState>,
     pub confirm: Option<ConfirmAction>,
+    pub help_items: Vec<HelpItem>,
 }
 
 impl App {
@@ -123,6 +128,7 @@ impl App {
                 }
             },
             confirm: None,
+            help_items: help_items(),
         })
     }
 
@@ -388,17 +394,28 @@ impl App {
     }
 
     // IMPORTANT
-    // TODO: remove the hardcoded length (28)
     pub fn help_down(&mut self) {
+        let len = self.help_len();
+
+        if len == 0 {
+            return;
+        }
+
         if let Screen::Help { selected } = &mut self.screen {
-            *selected = (*selected + 1) % 28;
+            *selected = (*selected + 1) % len;
         }
     }
 
     pub fn help_up(&mut self) {
+        let len = self.help_len();
+
+        if len == 0 {
+            return;
+        }
+
         if let Screen::Help { selected } = &mut self.screen {
             *selected = if *selected == 0 {
-                28 - 1
+                len - 1
             } else {
                 *selected - 1
             };
@@ -736,6 +753,28 @@ impl App {
         }
 
         false
+    }
+
+    fn help_len(&self) -> usize {
+        self.help_items
+            .iter()
+            .filter(|item| matches!(item, HelpItem::Entry(_)))
+            .count()
+    }
+
+    fn help_entry_index(&self, selected: usize) -> usize {
+        let mut count = 0;
+
+        for (i, item) in self.help_items.iter().enumerate() {
+            if matches!(item, HelpItem::Entry(_)) {
+                if count == selected {
+                    return i;
+                }
+                count += 1;
+            }
+        }
+
+        0
     }
 }
 
