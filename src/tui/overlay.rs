@@ -71,13 +71,16 @@ pub fn draw_confirm_overlay(
                 Line::default(),
                 Line::from(vec![
                     Span::styled(
-                        "[Y]",
+                        "[Y/Enter]",
                         Style::default()
                             .fg(Color::LightRed)
                             .add_modifier(Modifier::BOLD),
                     ),
                     Span::raw(" Confirm    "),
-                    Span::styled("[N]", Style::default().fg(Color::DarkGray)),
+                    Span::styled(
+                        "[N/Esc]",
+                        Style::default().fg(Color::DarkGray),
+                    ),
                     Span::raw(" Cancel"),
                 ]),
             ]

@@ -23,9 +23,9 @@ pub fn draw_toasts(frame: &mut Frame, app: &mut App) {
         let toast_area = Rect::new(x, y, toast_width, toast_height);
 
         let (icon, color) = match toast.kind {
-            ToastKind::Success => ("✓", Color::Green),
-            ToastKind::Error => ("✗", Color::Red),
-            ToastKind::Info => ("i", Color::Blue),
+            ToastKind::Success => (" ✓", Color::Green),
+            ToastKind::Error => (" ✗", Color::Red),
+            ToastKind::Info => (" i", Color::Blue),
         };
 
         let block = Block::default()

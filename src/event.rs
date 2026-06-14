@@ -26,6 +26,21 @@ pub fn handle_key(
                 app.push_toast(Toast::success("Library scanned"));
                 return Ok(());
             }
+            KeyCode::Char('e') => {
+                if matches!(app.screen, Screen::Library { .. }) {
+                    app.start_rename();
+                }
+            }
+            KeyCode::Char('d') => {
+                if matches!(app.screen, Screen::Library { .. }) {
+                    app.start_delete();
+                }
+            }
+            KeyCode::Char('n') => {
+                if matches!(app.screen, Screen::Library { .. }) {
+                    app.start_new_playlist();
+                }
+            }
             _ => {}
         }
     }
@@ -34,9 +49,13 @@ pub fn handle_key(
         return Ok(());
     }
 
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        return Ok(());
+    };
+
     if app.is_confirming() {
         match key.code {
-            KeyCode::Char('y') => {
+            KeyCode::Char('y') | KeyCode::Enter => {
                 if let Some(confirm) = app.confirm.take() {
                     match confirm {
                         ConfirmAction::Delete { path, .. } => {
@@ -183,23 +202,6 @@ pub fn handle_key(
         KeyCode::Char('-') => {
             let volume = app.volume_down();
             audio_player.set_volume(volume);
-        }
-
-        // file manipulations
-        KeyCode::Char('r') => {
-            if matches!(app.screen, Screen::Library { .. }) {
-                app.start_rename();
-            }
-        }
-        KeyCode::Char('d') => {
-            if matches!(app.screen, Screen::Library { .. }) {
-                app.start_delete();
-            }
-        }
-        KeyCode::Char('c') => {
-            if matches!(app.screen, Screen::Library { .. }) {
-                app.start_new_playlist();
-            }
         }
 
         _ => {}

@@ -151,12 +151,16 @@ pub fn help_items() -> Vec<HelpItem> {
             muted(" Add song to favorites"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[ctrl + r]"),
+            key_inline("[ctrl + e]"),
             muted(" Rename song or playlist"),
         ])),
         HelpItem::Entry(Line::from(vec![
             key_inline("[ctrl + d]"),
             muted(" Delete song or playlist"),
+        ])),
+        HelpItem::Entry(Line::from(vec![
+            key_inline("[ctrl + r]"),
+            muted(" Rescan library"),
         ])),
         HelpItem::Spacer,
         HelpItem::Header("Application"),
