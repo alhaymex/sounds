@@ -1,4 +1,5 @@
 pub mod draw_toast;
+pub mod favorites;
 pub mod help;
 pub mod library;
 pub mod options;

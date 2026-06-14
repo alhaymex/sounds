@@ -48,10 +48,11 @@ pub fn draw_help_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         .block(
             Block::default()
                 .title(" HELP ")
-                .padding(Padding::horizontal(2)),
+                .padding(Padding::new(2, 2, 1, 2)),
         )
         .highlight_style(Style::default())
-        .highlight_symbol("▶ ");
+        .highlight_symbol("▶ ")
+        .scroll_padding(3);
 
     let mut state = ListState::default();
     let map = help_entry_map(app);
@@ -68,96 +69,101 @@ pub fn help_items() -> Vec<HelpItem> {
         HelpItem::Spacer,
         HelpItem::Header("Navigation"),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[j / ↓]  "),
+            key_inline("[j / ↓]   "),
             muted(" Move down"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[k / ↑]  "),
+            key_inline("[k / ↑]   "),
             muted(" Move up"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[⏎]      "),
+            key_inline("[⏎]       "),
             muted(" Enter / Open / Play"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[esc / ⌫]"),
+            key_inline("[esc / ⌫] "),
             muted(" Go back"),
         ])),
         HelpItem::Spacer,
         HelpItem::Header("Playback"),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[space]  "),
+            key_inline("[space]   "),
             muted(" Play / Pause"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[s]      "),
+            key_inline("[s]       "),
             muted(" Stop playback"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[n]      "),
+            key_inline("[n]       "),
             muted(" Next song"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[p]      "),
+            key_inline("[p]       "),
             muted(" Previous song"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[h / ←]  "),
+            key_inline("[h / ←]   "),
             muted(" Seek backward"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[l / →]  "),
+            key_inline("[l / →]   "),
             muted(" Seek forward"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[+]      "),
+            key_inline("[+]       "),
             muted(" Volume up"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[-]      "),
+            key_inline("[-]       "),
             muted(" Volume down"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[>]      "),
+            key_inline("[>]       "),
             muted(" Increase speed"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[<]      "),
+            key_inline("[<]       "),
             muted(" Decrease speed"),
         ])),
         HelpItem::Spacer,
         HelpItem::Header("Screens"),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[o]      "),
+            key_inline("[f]       "),
+            muted(" Open favorites"),
+        ])),
+        HelpItem::Entry(Line::from(vec![
+            key_inline("[o]       "),
             muted(" Open options"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[?]      "),
+            key_inline("[?]       "),
             muted(" Toggle help"),
         ])),
         HelpItem::Spacer,
-        HelpItem::Header("Library Management"),
+        HelpItem::Header("Actions"),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[r]      "),
-            muted(" Rename song or playlist"),
-        ])),
-        HelpItem::Entry(Line::from(vec![
-            key_inline("[a]      "),
+            key_inline("[ctrl + n]"),
             muted(" Create playlist"),
         ])),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[d]      "),
+            key_inline("[ctrl + f]"),
+            muted(" Add song to favorites"),
+        ])),
+        HelpItem::Entry(Line::from(vec![
+            key_inline("[ctrl + r]"),
+            muted(" Rename song or playlist"),
+        ])),
+        HelpItem::Entry(Line::from(vec![
+            key_inline("[ctrl + d]"),
             muted(" Delete song or playlist"),
         ])),
         HelpItem::Spacer,
         HelpItem::Header("Application"),
         HelpItem::Entry(Line::from(vec![
-            key_inline("[q]      "),
+            key_inline("[q]       "),
             muted(" Quit"),
         ])),
-        HelpItem::Spacer,
-        HelpItem::Spacer,
-        HelpItem::Spacer,
     ]
 }
 
