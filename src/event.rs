@@ -74,6 +74,7 @@ pub fn handle_key(
 
     match key.code {
         KeyCode::Char('q') => app.quit(),
+
         KeyCode::Down | KeyCode::Char('j') => match app.screen {
             Screen::Library { .. } => {
                 app.move_down();
@@ -97,6 +98,8 @@ pub fn handle_key(
         KeyCode::Backspace | KeyCode::Esc => app.back(),
         KeyCode::Char('?') => app.toggle_help(),
         KeyCode::Char('o') => app.open_options(),
+        KeyCode::Char('f') => app.open_favorites(),
+
         KeyCode::Enter => match app.screen {
             Screen::Options => {
                 app.activate_selected_option()?;

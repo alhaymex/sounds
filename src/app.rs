@@ -219,7 +219,7 @@ impl App {
                     self.screen = prev;
                 }
             }
-            Screen::Options | Screen::Help { .. } => {
+            Screen::Options | Screen::Favorites | Screen::Help { .. } => {
                 if let Some(prev) = self.navigation_stack.pop() {
                     self.screen = prev;
                 } else {
@@ -229,7 +229,6 @@ impl App {
                     };
                 }
             }
-            Screen::Favorites => {}
         }
     }
 
@@ -492,6 +491,15 @@ impl App {
             self.navigation_stack.push(self.screen.clone());
             self.screen = Screen::Help { selected: 0 };
         }
+    }
+
+    pub fn open_favorites(&mut self) {
+        if self.screen == Screen::Favorites {
+            return;
+        }
+
+        self.navigation_stack.push(self.screen.clone());
+        self.screen = Screen::Favorites;
     }
 
     pub fn is_input_active(&self) -> bool {
