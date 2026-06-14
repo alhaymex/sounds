@@ -82,6 +82,7 @@ pub fn handle_key(
                 app.options_down();
             }
             Screen::Help { .. } => app.help_down(),
+            Screen::Favorites => {}
         },
         KeyCode::Up | KeyCode::Char('k') => match app.screen {
             Screen::Library { .. } => {
@@ -91,6 +92,7 @@ pub fn handle_key(
                 app.options_up();
             }
             Screen::Help { .. } => app.help_up(),
+            Screen::Favorites => {}
         },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
         KeyCode::Char('?') => app.toggle_help(),
@@ -109,6 +111,7 @@ pub fn handle_key(
             }
 
             Screen::Help { .. } => {}
+            Screen::Favorites => {}
         },
 
         KeyCode::Char(' ') => {

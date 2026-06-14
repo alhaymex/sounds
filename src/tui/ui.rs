@@ -43,6 +43,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         }
         Screen::Options => draw_options_screen(frame, app, body),
         Screen::Help { .. } => draw_help_screen(frame, app, body),
+        Screen::Favorites => {}
     }
 
     draw_player(frame, app, player);

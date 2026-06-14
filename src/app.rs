@@ -28,6 +28,7 @@ const DEFAULT_PLAYLISTS: &[&str] = &["Favorites", "Archive"];
 pub enum Screen {
     Library { path: PathBuf, selected: usize },
     Options,
+    Favorites,
     Help { selected: usize },
 }
 
@@ -233,6 +234,7 @@ impl App {
                     };
                 }
             }
+            Screen::Favorites => {}
         }
     }
 

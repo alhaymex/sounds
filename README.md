@@ -77,7 +77,6 @@ This opens the TUI where you can browse and play your music. Press `?` for keybi
 - [ ] Search
 - [ ] YouTube integration via yt-dlp
 - [ ] macOS support
-- [ ] Integrate `rusqlite` for complex searches, indexing, and features like favorites
 
 ## License
 
