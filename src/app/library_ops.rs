@@ -3,9 +3,9 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 
+use super::{App, Screen};
 use crate::library::scan::scan_library;
 use crate::system::settings::Settings;
-use super::{App, Screen};
 
 impl App {
     pub fn set_library_dir(&mut self, dir: PathBuf) -> Result<()> {

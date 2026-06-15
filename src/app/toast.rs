@@ -1,5 +1,5 @@
-use crate::tui::toast::Toast;
 use super::App;
+use crate::tui::toast::Toast;
 
 impl App {
     pub fn push_toast(&mut self, mut toast: Toast) -> u64 {

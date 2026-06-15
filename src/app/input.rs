@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 
-use crate::state::input::{InputTarget, TextInputState};
 use super::{App, ConfirmAction, Screen};
+use crate::state::input::{InputTarget, TextInputState};
 
 impl App {
     pub fn is_input_active(&self) -> bool {

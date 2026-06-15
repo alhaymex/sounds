@@ -1,10 +1,10 @@
 use anyhow::Result;
 
+use super::{App, Screen};
 use crate::state::input::InputTarget;
 use crate::state::options::OptionsItem;
 use crate::system::settings::Settings;
 use crate::tui::help::HelpItem;
-use super::{App, Screen};
 
 impl App {
     pub fn open_options(&mut self) {
