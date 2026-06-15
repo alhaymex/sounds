@@ -53,12 +53,6 @@ cargo install --path .
 
 > **Note:** On Linux, you need `libasound2-dev` and `pkg-config` installed.
 
-## Update
-
-```bash
-sounds update
-```
-
 ## Usage
 
 ```bash
@@ -66,6 +60,24 @@ sounds
 ```
 
 This opens the TUI where you can browse and play your music. Press `?` for keybindings.
+
+### CLI Commands
+
+```bash
+# Open the TUI with the default library
+sounds
+
+# Show the current version
+sounds version
+
+# Update to the latest release
+sounds update
+
+# Download audio from a YouTube URL into library/Downloads
+sounds download https://youtube.com/watch?v=dQw4w9WgXcQ
+```
+
+> **Note:** `sounds download` requires `yt-dlp` and `ffmpeg` to be installed.
 
 ## Roadmap
 
@@ -77,7 +89,7 @@ This opens the TUI where you can browse and play your music. Press `?` for keybi
 - [x] Refactor app.rs
 - [x] macOS support
 - [x] Search
-- [ ] YouTube integration via yt-dlp
+- [x] YouTube integration via yt-dlp
 
 ## License
 
