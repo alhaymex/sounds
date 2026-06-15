@@ -27,11 +27,10 @@ impl App {
                 .favorite_songs()
                 .iter()
                 .position(|song| song.id == song_id),
-            Screen::Search { query, .. } => {
-                self.search_results(query)
-                    .iter()
-                    .position(|song| song.id == song_id)
-            }
+            Screen::Search { query, .. } => self
+                .search_results(query)
+                .iter()
+                .position(|song| song.id == song_id),
             _ => None,
         };
 

@@ -19,11 +19,9 @@ pub fn draw_search(frame: &mut Frame, app: &mut App, area: Rect) {
         _ => return,
     };
 
-    let [input_area, results_area] = Layout::vertical([
-        Constraint::Length(3),
-        Constraint::Fill(1),
-    ])
-    .areas(area);
+    let [input_area, results_area] =
+        Layout::vertical([Constraint::Length(3), Constraint::Fill(1)])
+            .areas(area);
 
     let input_block = Block::default()
         .title(" Search ")
