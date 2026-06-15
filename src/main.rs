@@ -67,6 +67,7 @@ fn update() -> Result<()> {
         .show_download_progress(true)
         .show_output(true)
         .no_confirm(false)
+        .current_version(env!("CARGO_PKG_VERSION"))
         .build()?
         .update()?;
 
