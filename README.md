@@ -74,10 +74,10 @@ This opens the TUI where you can browse and play your music. Press `?` for keybi
 - [x] Auto-play next song
 - [x] Add simple, scoped file manipulation (e.g. rename a playlist or a song)
 - [x] Audio playack speed controls
+- [x] Refactor app.rs
+- [x] macOS support
 - [ ] Search
 - [ ] YouTube integration via yt-dlp
-- [ ] macOS support
-- [ ] Integrate `rusqlite` for complex searches, indexing, and features like favorites
 
 ## License
 

@@ -6,15 +6,14 @@ use std::{
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
+use crate::system::fs::config_dir;
+
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Settings {
     pub library_dir: Option<PathBuf>,
     pub rain_enabled: bool,
 }
-
-// TODO: implement a default for Settings
-// and add the rest of the options
 
 impl Settings {
     pub fn load() -> Result<Self> {
@@ -61,9 +60,7 @@ impl Settings {
 }
 
 pub fn settings_path() -> Result<PathBuf> {
-    let config_dir =
-        dirs::config_dir().context("could not determine config directory")?;
-    Ok(config_dir.join("sounds").join("settings.json"))
+    Ok(config_dir()?.join("settings.json"))
 }
 
 pub fn default_library_dir() -> Option<PathBuf> {

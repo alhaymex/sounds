@@ -6,6 +6,7 @@ use ratatui::{
 
 use crate::tui::{
     draw_toast::draw_toasts,
+    favorites::draw_favorites,
     help::draw_help_screen,
     library::draw_library,
     options::draw_options_screen,
@@ -43,6 +44,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         }
         Screen::Options => draw_options_screen(frame, app, body),
         Screen::Help { .. } => draw_help_screen(frame, app, body),
+        Screen::Favorites { .. } => draw_favorites(frame, app, body),
     }
 
     draw_player(frame, app, player);
@@ -67,7 +69,7 @@ fn draw_footer(frame: &mut Frame, _app: &mut App, layout: Rect) {
         muted(" play  "),
         key_inline("[esc]"),
         muted(" back  "),
-        key_inline("[f]"),
+        key_inline("[/]"),
         muted(" search  "),
         key_inline("[o]"),
         muted(" options  "),

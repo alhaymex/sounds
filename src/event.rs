@@ -26,6 +26,29 @@ pub fn handle_key(
                 app.push_toast(Toast::success("Library scanned"));
                 return Ok(());
             }
+            KeyCode::Char('e') => {
+                if matches!(app.screen, Screen::Library { .. }) {
+                    app.start_rename();
+                }
+            }
+            KeyCode::Char('d') => {
+                if matches!(app.screen, Screen::Library { .. }) {
+                    app.start_delete();
+                }
+            }
+            KeyCode::Char('n') => {
+                if matches!(app.screen, Screen::Library { .. }) {
+                    app.start_new_playlist();
+                }
+            }
+            KeyCode::Char('f') => {
+                if matches!(
+                    app.screen,
+                    Screen::Library { .. } | Screen::Favorites { .. }
+                ) {
+                    app.add_to_favorites()?;
+                }
+            }
             _ => {}
         }
     }
@@ -34,9 +57,13 @@ pub fn handle_key(
         return Ok(());
     }
 
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        return Ok(());
+    };
+
     if app.is_confirming() {
         match key.code {
-            KeyCode::Char('y') => {
+            KeyCode::Char('y') | KeyCode::Enter => {
                 if let Some(confirm) = app.confirm.take() {
                     match confirm {
                         ConfirmAction::Delete { path, .. } => {
@@ -74,6 +101,7 @@ pub fn handle_key(
 
     match key.code {
         KeyCode::Char('q') => app.quit(),
+
         KeyCode::Down | KeyCode::Char('j') => match app.screen {
             Screen::Library { .. } => {
                 app.move_down();
@@ -82,6 +110,7 @@ pub fn handle_key(
                 app.options_down();
             }
             Screen::Help { .. } => app.help_down(),
+            Screen::Favorites { .. } => app.favorites_down(),
         },
         KeyCode::Up | KeyCode::Char('k') => match app.screen {
             Screen::Library { .. } => {
@@ -91,10 +120,13 @@ pub fn handle_key(
                 app.options_up();
             }
             Screen::Help { .. } => app.help_up(),
+            Screen::Favorites { .. } => app.favorites_up(),
         },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
         KeyCode::Char('?') => app.toggle_help(),
         KeyCode::Char('o') => app.open_options(),
+        KeyCode::Char('f') => app.open_favorites(),
+
         KeyCode::Enter => match app.screen {
             Screen::Options => {
                 app.activate_selected_option()?;
@@ -108,6 +140,16 @@ pub fn handle_key(
                 }
             }
 
+            Screen::Favorites { .. } => {
+                if let Some(path) = app.play_selected_favorite() {
+                    audio_player.play(&path)?;
+                    app.sync_speed(audio_player.speed_index());
+                    app.sync_playback_time(
+                        audio_player.position(),
+                        audio_player.duration(),
+                    );
+                }
+            }
             Screen::Help { .. } => {}
         },
 
@@ -122,7 +164,12 @@ pub fn handle_key(
             app.stop_playback();
         }
         KeyCode::Char('n') => {
-            if let Some(next_id) = app.next_song_id() {
+            let next_id = match app.screen {
+                Screen::Favorites { .. } => app.next_favorite_song_id(),
+                _ => app.next_song_id(),
+            };
+
+            if let Some(next_id) = next_id {
                 if let Some(path) = app.advance_to_song(next_id) {
                     audio_player.play(&path)?;
                     app.sync_speed(audio_player.speed_index());
@@ -134,7 +181,12 @@ pub fn handle_key(
             }
         }
         KeyCode::Char('p') => {
-            if let Some(prev_id) = app.prev_song_id() {
+            let prev_id = match app.screen {
+                Screen::Favorites { .. } => app.prev_favorite_song_id(),
+                _ => app.prev_song_id(),
+            };
+
+            if let Some(prev_id) = prev_id {
                 if let Some(path) = app.advance_to_song(prev_id) {
                     audio_player.play(&path)?;
                     app.sync_speed(audio_player.speed_index());
@@ -177,23 +229,6 @@ pub fn handle_key(
         KeyCode::Char('-') => {
             let volume = app.volume_down();
             audio_player.set_volume(volume);
-        }
-
-        // file manipulations
-        KeyCode::Char('r') => {
-            if matches!(app.screen, Screen::Library { .. }) {
-                app.start_rename();
-            }
-        }
-        KeyCode::Char('d') => {
-            if matches!(app.screen, Screen::Library { .. }) {
-                app.start_delete();
-            }
-        }
-        KeyCode::Char('c') => {
-            if matches!(app.screen, Screen::Library { .. }) {
-                app.start_new_playlist();
-            }
         }
 
         _ => {}
