@@ -76,7 +76,7 @@ This opens the TUI where you can browse and play your music. Press `?` for keybi
 - [x] Audio playack speed controls
 - [x] Refactor app.rs
 - [x] macOS support
-- [ ] Search
+- [x] Search
 - [ ] YouTube integration via yt-dlp
 
 ## License
