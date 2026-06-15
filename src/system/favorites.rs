@@ -10,7 +10,7 @@ use crate::system::fs::config_dir;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Favorites {
-    songs: HashSet<PathBuf>,
+    pub songs: HashSet<PathBuf>,
 }
 
 impl Favorites {

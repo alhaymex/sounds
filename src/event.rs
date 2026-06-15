@@ -43,7 +43,7 @@ pub fn handle_key(
             }
             KeyCode::Char('f') => {
                 if matches!(app.screen, Screen::Library { .. }) {
-                    app.add_to_favorites();
+                    app.add_to_favorites()?;
                 }
             }
             _ => {}
@@ -107,7 +107,7 @@ pub fn handle_key(
                 app.options_down();
             }
             Screen::Help { .. } => app.help_down(),
-            Screen::Favorites => {}
+            Screen::Favorites => app.favorites_down(),
         },
         KeyCode::Up | KeyCode::Char('k') => match app.screen {
             Screen::Library { .. } => {
@@ -117,7 +117,7 @@ pub fn handle_key(
                 app.options_up();
             }
             Screen::Help { .. } => app.help_up(),
-            Screen::Favorites => {}
+            Screen::Favorites => app.favorites_up(),
         },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
         KeyCode::Char('?') => app.toggle_help(),

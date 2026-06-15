@@ -11,26 +11,18 @@ use crate::{
     tui::theme::{CONTENT_MAX_WIDTH, center_area},
 };
 
-pub fn draw_favorites(frame: &mut Frame, _app: &mut App, area: Rect) {
+pub fn draw_favorites(frame: &mut Frame, app: &mut App, area: Rect) {
     let area = center_area(area, CONTENT_MAX_WIDTH);
 
-    let favorites = vec![
-        "Nujabes - Feather",
-        "Daft Punk - Voyager",
-        "Tomppabeats - Monday Loop",
-        "Idealism - Controlla",
-        "Kanye West - POWER",
-        "Eminem - Till I Collapse",
-    ];
+    let favorite_songs = app.favorite_songs();
 
-    let items: Vec<ListItem> = favorites
+    let items: Vec<ListItem> = favorite_songs
         .iter()
-        .map(|title| {
+        .map(|song| {
             let line = Line::from(vec![
                 Span::styled("♥ ", Style::default().fg(Color::Yellow)),
-                Span::raw(title.to_string()),
+                Span::raw(song.title.clone()),
             ]);
-
             ListItem::new(line)
         })
         .collect();
@@ -52,7 +44,7 @@ pub fn draw_favorites(frame: &mut Frame, _app: &mut App, area: Rect) {
         .style(Style::default().fg(Color::White));
 
     let mut state = ListState::default();
-    state.select(Some(0));
+    state.select(Some(app.favorites_selected));
 
     frame.render_stateful_widget(list, area, &mut state);
 }
