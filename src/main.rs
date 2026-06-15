@@ -5,11 +5,18 @@ mod library;
 mod state;
 mod system;
 mod tui;
+mod youtube;
 
-use anyhow::{Ok, Result};
+use std::{fs, path::PathBuf};
+
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 
-use crate::app::App;
+use crate::{
+    app::App,
+    system::settings::{Settings, default_library_dir},
+    youtube::download_audio,
+};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -29,6 +36,8 @@ enum Command {
     Version,
     /// Update to the latest version
     Update,
+    /// Download from youtube url
+    Download { url: String },
 }
 
 fn main() -> Result<()> {
@@ -41,6 +50,7 @@ fn main() -> Result<()> {
                 env!("CARGO_PKG_VERSION")
             );
         }
+        Some(Command::Download { url }) => download(&url)?,
         Some(Command::Update) => {
             update()?;
         }
@@ -49,6 +59,29 @@ fn main() -> Result<()> {
             tui::run(app)?;
         }
     }
+
+    Ok(())
+}
+
+fn download(url: &str) -> Result<()> {
+    let settings = Settings::load()?;
+    let library_dir = settings
+        .library_dir
+        .or_else(default_library_dir)
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    let downloads_dir = library_dir.join("Downloads");
+
+    fs::create_dir_all(&downloads_dir).with_context(|| {
+        format!("failed to create {}", downloads_dir.display())
+    })?;
+
+    println!("Downloading audio from {url}...");
+    println!("Saving to {}", downloads_dir.display());
+
+    download_audio(url, &downloads_dir)?;
+
+    println!("Download complete");
 
     Ok(())
 }
