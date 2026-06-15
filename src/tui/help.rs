@@ -143,6 +143,10 @@ pub fn help_items() -> Vec<HelpItem> {
         HelpItem::Spacer,
         HelpItem::Header("Actions"),
         HelpItem::Entry(Line::from(vec![
+            key_inline("[/]       "),
+            muted(" Search library"),
+        ])),
+        HelpItem::Entry(Line::from(vec![
             key_inline("[ctrl + n]"),
             muted(" Create playlist"),
         ])),
