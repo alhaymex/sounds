@@ -13,6 +13,7 @@ impl App {
             return;
         }
 
+        self.cancel_input();
         self.navigation_stack.push(self.screen.clone());
         self.screen = Screen::Favorites { selected: 0 };
     }
@@ -20,9 +21,11 @@ impl App {
     pub fn add_to_favorites(&mut self) -> Result<()> {
         let is_library = matches!(self.screen, Screen::Library { .. });
         let is_favorites = matches!(self.screen, Screen::Favorites { .. });
+        let is_search = matches!(self.screen, Screen::Search { .. });
 
         let selected = match &self.screen {
-            Screen::Favorites { selected } => *selected,
+            Screen::Favorites { selected }
+            | Screen::Search { selected, .. } => *selected,
             _ => 0,
         };
 
@@ -32,6 +35,8 @@ impl App {
             self.favorite_songs()
                 .get(selected)
                 .map(|song| song.path.clone())
+        } else if is_search {
+            self.selected_search_song_path()
         } else {
             None
         };

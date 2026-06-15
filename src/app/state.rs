@@ -8,9 +8,10 @@ pub use crate::tui::toast::Toast;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Screen {
     Library { path: PathBuf, selected: usize },
-    Options,
     Favorites { selected: usize },
+    Search { query: String, selected: usize },
     Help { selected: usize },
+    Options,
 }
 
 pub enum ConfirmAction {

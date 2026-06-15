@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use super::{App, DirEntry, Screen, SongId};
+use crate::state::input::{InputTarget, TextInputState};
 
 impl App {
     pub fn move_up(&mut self) {
@@ -86,10 +87,23 @@ impl App {
                 }
             }
             Screen::Options
+            | Screen::Search { .. }
             | Screen::Favorites { .. }
             | Screen::Help { .. } => {
                 if let Some(prev) = self.navigation_stack.pop() {
+                    let query = match &prev {
+                        Screen::Search { query, .. } => Some(query.clone()),
+                        _ => None,
+                    };
+
                     self.screen = prev;
+
+                    if let Some(query) = query {
+                        self.input = Some(TextInputState::new(
+                            InputTarget::Search,
+                            query,
+                        ));
+                    }
                 } else {
                     self.screen = Screen::Library {
                         path: self.library.root.clone(),

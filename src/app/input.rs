@@ -53,6 +53,20 @@ impl App {
         self.confirm = Some(ConfirmAction::Delete { path, name });
     }
 
+    pub fn start_search(&mut self) {
+        if matches!(self.screen, Screen::Search { .. }) {
+            return;
+        }
+
+        self.navigation_stack.push(self.screen.clone());
+        self.screen = Screen::Search {
+            query: String::new(),
+            selected: 0,
+        };
+
+        self.start_input(InputTarget::Search, "");
+    }
+
     pub fn cancel_confirm(&mut self) {
         self.confirm = None;
     }
@@ -74,6 +88,45 @@ impl App {
     pub fn input_backspace(&mut self) {
         if let Some(input) = self.input.as_mut() {
             input.pop_char();
+        }
+    }
+
+    pub fn search_input_char(&mut self, ch: char) {
+        if let Some(input) = self.input.as_mut() {
+            input.push_char(ch);
+        }
+
+        if let Screen::Search { query, .. } = &mut self.screen {
+            if let Some(input) = &self.input {
+                *query = input.value.clone();
+            }
+        }
+
+        self.clamp_search_selection();
+    }
+
+    pub fn search_input_backspace(&mut self) {
+        if let Some(input) = self.input.as_mut() {
+            input.pop_char();
+        }
+
+        if let Screen::Search { query, .. } = &mut self.screen {
+            if let Some(input) = &self.input {
+                *query = input.value.clone();
+            }
+        }
+
+        self.clamp_search_selection();
+    }
+
+    pub fn clear_search_input(&mut self) {
+        if let Some(input) = self.input.as_mut() {
+            input.value.clear();
+        }
+
+        if let Screen::Search { query, selected } = &mut self.screen {
+            query.clear();
+            *selected = 0;
         }
     }
 

@@ -19,7 +19,7 @@ pub fn draw_input_overlay(
     let title = match &input.target {
         InputTarget::Rename { .. } => " Rename ",
         InputTarget::NewPlaylist { .. } => " New Playlist ",
-        InputTarget::Search => " Search ",
+        InputTarget::Search => return,
         InputTarget::LibraryPath => return,
     };
 

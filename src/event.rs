@@ -3,6 +3,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::app::{App, ConfirmAction, PlaybackStatus, Screen};
 use crate::audio::player::AudioPlayer;
+use crate::state::input::InputTarget;
 use crate::tui::toast::{Toast, ToastKind};
 
 pub fn handle_key(
@@ -44,7 +45,9 @@ pub fn handle_key(
             KeyCode::Char('f') => {
                 if matches!(
                     app.screen,
-                    Screen::Library { .. } | Screen::Favorites { .. }
+                    Screen::Library { .. }
+                        | Screen::Favorites { .. }
+                        | Screen::Search { .. }
                 ) {
                     app.add_to_favorites()?;
                 }
@@ -88,15 +91,67 @@ pub fn handle_key(
     }
 
     if app.is_input_active() {
-        match key.code {
-            KeyCode::Enter => app.submit_input()?,
-            KeyCode::Esc => app.cancel_input(),
-            KeyCode::Backspace => app.input_backspace(),
-            KeyCode::Char(ch) => app.input_char(ch),
-            _ => {}
-        }
+        let is_search = app
+            .input
+            .as_ref()
+            .is_some_and(|i| i.target == InputTarget::Search);
 
-        return Ok(());
+        if is_search {
+            match key.code {
+                KeyCode::Enter => {
+                    if let Some(path) = app.play_selected_search_result() {
+                        audio_player.play(&path)?;
+                        app.sync_speed(audio_player.speed_index());
+                        app.sync_playback_time(
+                            audio_player.position(),
+                            audio_player.duration(),
+                        );
+                    }
+                    return Ok(());
+                }
+                KeyCode::Esc => {
+                    if app
+                        .input
+                        .as_ref()
+                        .map(|i| i.value.is_empty())
+                        .unwrap_or(true)
+                    {
+                        app.cancel_input();
+                        app.back();
+                    } else {
+                        app.clear_search_input();
+                    }
+                    return Ok(());
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    app.search_up();
+                    return Ok(());
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    app.search_down();
+                    return Ok(());
+                }
+                KeyCode::Backspace => {
+                    app.search_input_backspace();
+                    return Ok(());
+                }
+                KeyCode::Char(ch) => {
+                    app.search_input_char(ch);
+                    return Ok(());
+                }
+                _ => {}
+            }
+        } else {
+            match key.code {
+                KeyCode::Enter => app.submit_input()?,
+                KeyCode::Esc => app.cancel_input(),
+                KeyCode::Backspace => app.input_backspace(),
+                KeyCode::Char(ch) => app.input_char(ch),
+                _ => {}
+            }
+
+            return Ok(());
+        }
     }
 
     match key.code {
@@ -111,6 +166,7 @@ pub fn handle_key(
             }
             Screen::Help { .. } => app.help_down(),
             Screen::Favorites { .. } => app.favorites_down(),
+            Screen::Search { .. } => app.search_down(),
         },
         KeyCode::Up | KeyCode::Char('k') => match app.screen {
             Screen::Library { .. } => {
@@ -121,11 +177,13 @@ pub fn handle_key(
             }
             Screen::Help { .. } => app.help_up(),
             Screen::Favorites { .. } => app.favorites_up(),
+            Screen::Search { .. } => app.search_up(),
         },
         KeyCode::Backspace | KeyCode::Esc => app.back(),
         KeyCode::Char('?') => app.toggle_help(),
         KeyCode::Char('o') => app.open_options(),
         KeyCode::Char('f') => app.open_favorites(),
+        KeyCode::Char('/') => app.start_search(),
 
         KeyCode::Enter => match app.screen {
             Screen::Options => {
@@ -150,9 +208,20 @@ pub fn handle_key(
                     );
                 }
             }
+            Screen::Search { .. } => {
+                if let Some(path) = app.play_selected_search_result() {
+                    audio_player.play(&path)?;
+                    app.sync_speed(audio_player.speed_index());
+                    app.sync_playback_time(
+                        audio_player.position(),
+                        audio_player.duration(),
+                    );
+                }
+            }
             Screen::Help { .. } => {}
         },
 
+        // we can add playback keys too
         KeyCode::Char(' ') => {
             if app.playback.status != PlaybackStatus::Stopped {
                 audio_player.toggle_pause();
@@ -166,6 +235,7 @@ pub fn handle_key(
         KeyCode::Char('n') => {
             let next_id = match app.screen {
                 Screen::Favorites { .. } => app.next_favorite_song_id(),
+                Screen::Search { .. } => app.next_search_song_id(),
                 _ => app.next_song_id(),
             };
 
@@ -183,6 +253,7 @@ pub fn handle_key(
         KeyCode::Char('p') => {
             let prev_id = match app.screen {
                 Screen::Favorites { .. } => app.prev_favorite_song_id(),
+                Screen::Search { .. } => app.prev_search_song_id(),
                 _ => app.prev_song_id(),
             };
 
