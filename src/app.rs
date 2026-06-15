@@ -763,6 +763,8 @@ impl App {
     pub fn dismiss_toast(&mut self, id: u64) {
         self.toasts.retain(|t| t.id != id);
     }
+
+    pub fn add_to_favorites(&self) {}
 }
 
 fn count_songs(node: &Node) -> usize {

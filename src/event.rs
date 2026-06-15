@@ -41,6 +41,11 @@ pub fn handle_key(
                     app.start_new_playlist();
                 }
             }
+            KeyCode::Char('f') => {
+                if matches!(app.screen, Screen::Library { .. }) {
+                    app.add_to_favorites();
+                }
+            }
             _ => {}
         }
     }

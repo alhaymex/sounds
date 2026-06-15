@@ -1,6 +1,14 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+use anyhow::{Context, Result};
 
 // NOTE: webm files are not supported for now
+
+pub fn config_dir() -> Result<PathBuf> {
+    dirs::config_dir()
+        .context("could not determine config directory")
+        .map(|p| p.join("sounds"))
+}
 
 pub fn is_audio_file(path: &Path) -> bool {
     matches!(
