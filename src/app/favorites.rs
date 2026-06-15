@@ -1,18 +1,20 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 
+use super::{App, Screen};
+use crate::app::SongId;
 use crate::library::model::SongRef;
 use crate::tui::toast::Toast;
-use super::{App, Screen};
 
 impl App {
     pub fn open_favorites(&mut self) {
-        if self.screen == Screen::Favorites {
+        if matches!(self.screen, Screen::Favorites { .. }) {
             return;
         }
 
-        self.favorites_selected = 0;
         self.navigation_stack.push(self.screen.clone());
-        self.screen = Screen::Favorites;
+        self.screen = Screen::Favorites { selected: 0 };
     }
 
     pub fn add_to_favorites(&mut self) -> Result<()> {
@@ -52,7 +54,9 @@ impl App {
             return;
         }
 
-        self.favorites_selected = (self.favorites_selected + 1) % len;
+        if let Screen::Favorites { selected } = &mut self.screen {
+            *selected = (*selected + 1) % len;
+        }
     }
 
     pub fn favorites_up(&mut self) {
@@ -61,10 +65,54 @@ impl App {
             return;
         }
 
-        self.favorites_selected = if self.favorites_selected == 0 {
-            len - 1
-        } else {
-            self.favorites_selected - 1
+        if let Screen::Favorites { selected } = &mut self.screen {
+            *selected = if *selected == 0 {
+                len - 1
+            } else {
+                *selected - 1
+            };
+        }
+    }
+
+    pub fn play_selected_favorite(&mut self) -> Option<PathBuf> {
+        let selected = match &self.screen {
+            Screen::Favorites { selected } => *selected,
+            _ => return None,
         };
+
+        let song_id =
+            self.favorite_songs().get(selected).map(|song| song.id)?;
+
+        self.advance_to_song(song_id)
+    }
+
+    pub fn next_favorite_song_id(&self) -> Option<SongId> {
+        let songs = self.favorite_songs();
+        if songs.is_empty() {
+            return None;
+        }
+
+        let current_id = self.playback.current_song?;
+        let current_idx =
+            songs.iter().position(|song| song.id == current_id)?;
+
+        songs.get(current_idx + 1).map(|song| song.id)
+    }
+
+    pub fn prev_favorite_song_id(&self) -> Option<SongId> {
+        let songs = self.favorite_songs();
+        if songs.is_empty() {
+            return None;
+        }
+
+        let current_id = self.playback.current_song?;
+        let current_idx =
+            songs.iter().position(|song| song.id == current_id)?;
+
+        if current_idx == 0 {
+            None
+        } else {
+            songs.get(current_idx - 1).map(|song| song.id)
+        }
     }
 }

@@ -9,7 +9,7 @@ pub use crate::tui::toast::Toast;
 pub enum Screen {
     Library { path: PathBuf, selected: usize },
     Options,
-    Favorites,
+    Favorites { selected: usize },
     Help { selected: usize },
 }
 

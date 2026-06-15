@@ -24,7 +24,7 @@ use crossterm::terminal::{
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 
-use crate::app::App;
+use crate::app::{App, Screen};
 use crate::audio::player::AudioPlayer;
 use crate::event;
 
@@ -65,7 +65,12 @@ pub fn run(mut app: App) -> Result<()> {
 
         // auto play next song when curr finishes
         if audio_player.is_finished() {
-            if let Some(next_id) = app.next_song_id() {
+            let next_id = match app.screen {
+                Screen::Favorites { .. } => app.next_favorite_song_id(),
+                _ => app.next_song_id(),
+            };
+
+            if let Some(next_id) = next_id {
                 if let Some(path) = app.advance_to_song(next_id) {
                     let _ = audio_player.play(&path);
                     app.sync_playback_time(

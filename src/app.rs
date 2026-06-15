@@ -5,23 +5,20 @@ use crate::library::{
     model::{Library, Node},
     scan::{find_dir_by_path, scan_library},
 };
-use crate::state::{
-    input::TextInputState,
-    options::OptionsState,
-};
+use crate::state::{input::TextInputState, options::OptionsState};
 use crate::system::{
     favorites::Favorites,
     settings::{Settings, default_library_dir},
 };
 use crate::tui::help::help_items;
 
-mod state;
-mod navigation;
-mod playback;
-mod screens;
 mod favorites;
 mod input;
 mod library_ops;
+mod navigation;
+mod playback;
+mod screens;
+mod state;
 mod toast;
 
 pub use state::*;
@@ -40,7 +37,6 @@ pub struct App {
     pub(crate) confirm: Option<ConfirmAction>,
     pub(crate) help_items: Vec<HelpItem>,
     pub(crate) toasts: Vec<Toast>,
-    pub(crate) favorites_selected: usize,
     toast_id_counter: u64,
 }
 
@@ -77,7 +73,6 @@ impl App {
             help_items: help_items(),
             toasts: Vec::new(),
             toast_id_counter: 0,
-            favorites_selected: 0,
         })
     }
 

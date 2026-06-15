@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use crate::audio::player::SPEEDS;
 use super::{App, DirEntry, PlaybackStatus, Screen, SongId};
+use crate::audio::player::SPEEDS;
 
 impl App {
     pub fn advance_to_song(&mut self, song_id: SongId) -> Option<PathBuf> {
@@ -15,21 +15,28 @@ impl App {
         self.playback.duration = None;
 
         // Find the new cursor position
-        let new_idx = if let Screen::Library { ref path, .. } = self.screen {
-            let dir_path = path.clone();
-            let entries = self.dir_entries(&dir_path);
-            entries.iter().position(
-                |e| matches!(e, DirEntry::Song { id, .. } if *id == song_id),
-            )
-        } else {
-            None
+        let new_idx = match &self.screen {
+            Screen::Library { path, .. } => {
+                let dir_path = path.clone();
+                let entries = self.dir_entries(&dir_path);
+                entries.iter().position(
+                    |e| matches!(e, DirEntry::Song { id, .. } if *id == song_id),
+                )
+            }
+            Screen::Favorites { .. } => self
+                .favorite_songs()
+                .iter()
+                .position(|song| song.id == song_id),
+            _ => None,
         };
 
         // update cursor
-        if let (Some(idx), Screen::Library { selected, .. }) =
-            (new_idx, &mut self.screen)
-        {
-            *selected = idx;
+        if let Some(idx) = new_idx {
+            match &mut self.screen {
+                Screen::Library { selected, .. } => *selected = idx,
+                Screen::Favorites { selected } => *selected = idx,
+                _ => {}
+            }
         }
 
         Some(path)

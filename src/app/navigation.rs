@@ -85,7 +85,9 @@ impl App {
                     self.screen = prev;
                 }
             }
-            Screen::Options | Screen::Favorites | Screen::Help { .. } => {
+            Screen::Options
+            | Screen::Favorites { .. }
+            | Screen::Help { .. } => {
                 if let Some(prev) = self.navigation_stack.pop() {
                     self.screen = prev;
                 } else {

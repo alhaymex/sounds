@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::App,
+    app::{App, Screen},
     tui::theme::{CONTENT_MAX_WIDTH, center_area},
 };
 
@@ -19,10 +19,20 @@ pub fn draw_favorites(frame: &mut Frame, app: &mut App, area: Rect) {
     let items: Vec<ListItem> = favorite_songs
         .iter()
         .map(|song| {
-            let line = Line::from(vec![
-                Span::styled("♥ ", Style::default().fg(Color::Yellow)),
-                Span::raw(song.title.clone()),
-            ]);
+            let is_current = app.playback.current_song == Some(song.id);
+
+            let line = if is_current {
+                Line::styled(
+                    format!("♥ {}", song.title),
+                    Style::default().fg(Color::LightYellow),
+                )
+            } else {
+                Line::from(vec![
+                    Span::styled("♥ ", Style::default().fg(Color::Yellow)),
+                    Span::raw(song.title.clone()),
+                ])
+            };
+
             ListItem::new(line)
         })
         .collect();
@@ -43,8 +53,13 @@ pub fn draw_favorites(frame: &mut Frame, app: &mut App, area: Rect) {
         )
         .style(Style::default().fg(Color::White));
 
+    let selected = match &app.screen {
+        Screen::Favorites { selected } => *selected,
+        _ => 0,
+    };
+
     let mut state = ListState::default();
-    state.select(Some(app.favorites_selected));
+    state.select(Some(selected));
 
     frame.render_stateful_widget(list, area, &mut state);
 }
