@@ -42,7 +42,10 @@ pub fn handle_key(
                 }
             }
             KeyCode::Char('f') => {
-                if matches!(app.screen, Screen::Library { .. }) {
+                if matches!(
+                    app.screen,
+                    Screen::Library { .. } | Screen::Favorites { .. }
+                ) {
                     app.add_to_favorites()?;
                 }
             }

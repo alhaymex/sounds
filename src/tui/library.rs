@@ -30,7 +30,17 @@ pub fn draw_library(frame: &mut Frame, app: &mut App, area: Rect) {
             }
             DirEntry::Song { id, title } => {
                 let is_current = app.playback.current_song == Some(*id);
-                let item = ListItem::new(Line::from(format!("♪ {}", title)));
+                let is_favorite = app
+                    .library
+                    .index
+                    .get(*id)
+                    .map(|song| app.favorites.songs.contains(&song.path))
+                    .unwrap_or(false);
+
+                let symbol = if is_favorite { "♥" } else { "♪" };
+                let item =
+                    ListItem::new(Line::from(format!("{} {}", symbol, title)));
+
                 if is_current {
                     item.style(Style::default().fg(Color::LightBlue))
                 } else {

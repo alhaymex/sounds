@@ -18,12 +18,40 @@ impl App {
     }
 
     pub fn add_to_favorites(&mut self) -> Result<()> {
-        let Some(path) = self.selected_song_path() else {
+        let is_library = matches!(self.screen, Screen::Library { .. });
+        let is_favorites = matches!(self.screen, Screen::Favorites { .. });
+
+        let selected = match &self.screen {
+            Screen::Favorites { selected } => *selected,
+            _ => 0,
+        };
+
+        let path = if is_library {
+            self.selected_song_path()
+        } else if is_favorites {
+            self.favorite_songs()
+                .get(selected)
+                .map(|song| song.path.clone())
+        } else {
+            None
+        };
+
+        let Some(path) = path else {
             return Ok(());
         };
 
         let added = self.favorites.toggle_favorite(&path);
         self.favorites.save()?;
+
+        // Clamp Favorites selection after removal
+        if is_favorites {
+            let len = self.favorite_songs().len();
+            if let Screen::Favorites { selected } = &mut self.screen {
+                if len > 0 && *selected >= len {
+                    *selected = len - 1;
+                }
+            }
+        }
 
         self.push_toast(Toast::success(if added {
             "Added to favorites"
