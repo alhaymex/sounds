@@ -12,6 +12,7 @@ use crate::tui::{
     options::draw_options_screen,
     overlay::{draw_confirm_overlay, draw_input_overlay},
     player::draw_player,
+    search::draw_search,
 };
 use crate::{app::App, tui::theme::draw_rain_background};
 use crate::{
@@ -45,6 +46,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         Screen::Options => draw_options_screen(frame, app, body),
         Screen::Help { .. } => draw_help_screen(frame, app, body),
         Screen::Favorites { .. } => draw_favorites(frame, app, body),
+        Screen::Search { .. } => draw_search(frame, app, body),
     }
 
     draw_player(frame, app, player);

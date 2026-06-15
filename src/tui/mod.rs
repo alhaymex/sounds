@@ -5,6 +5,7 @@ pub mod library;
 pub mod options;
 pub mod overlay;
 pub mod player;
+pub mod search;
 pub mod theme;
 pub mod toast;
 pub mod ui;
@@ -67,6 +68,7 @@ pub fn run(mut app: App) -> Result<()> {
         if audio_player.is_finished() {
             let next_id = match app.screen {
                 Screen::Favorites { .. } => app.next_favorite_song_id(),
+                Screen::Search { .. } => app.next_search_song_id(),
                 _ => app.next_song_id(),
             };
 

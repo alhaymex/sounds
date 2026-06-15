@@ -12,6 +12,7 @@ impl App {
             return;
         }
 
+        self.cancel_input();
         self.navigation_stack.push(self.screen.clone());
         self.screen = Screen::Options;
     }
@@ -53,6 +54,8 @@ impl App {
     }
 
     pub fn toggle_help(&mut self) {
+        self.cancel_input();
+
         if matches!(self.screen, Screen::Help { .. }) {
             if let Some(prev) = self.navigation_stack.pop() {
                 self.screen = prev;

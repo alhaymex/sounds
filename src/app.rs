@@ -18,6 +18,7 @@ mod library_ops;
 mod navigation;
 mod playback;
 mod screens;
+mod search;
 mod state;
 mod toast;
 

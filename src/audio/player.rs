@@ -9,6 +9,7 @@ use rodio::{Decoder, DeviceSinkBuilder, MixerDeviceSink, Player, Source};
 
 pub const SPEEDS: &[f32] = &[0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
+#[allow(dead_code)]
 pub struct AudioPlayer {
     sink: MixerDeviceSink,
     player: Player,

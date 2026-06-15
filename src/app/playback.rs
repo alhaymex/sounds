@@ -27,6 +27,10 @@ impl App {
                 .favorite_songs()
                 .iter()
                 .position(|song| song.id == song_id),
+            Screen::Search { query, .. } => self
+                .search_results(query)
+                .iter()
+                .position(|song| song.id == song_id),
             _ => None,
         };
 
@@ -35,6 +39,7 @@ impl App {
             match &mut self.screen {
                 Screen::Library { selected, .. } => *selected = idx,
                 Screen::Favorites { selected } => *selected = idx,
+                Screen::Search { selected, .. } => *selected = idx,
                 _ => {}
             }
         }

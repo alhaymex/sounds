@@ -1,5 +1,6 @@
 use std::time::Instant;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToastKind {
     Success,
@@ -27,11 +28,11 @@ impl Toast {
         Self::new(msg, ToastKind::Success, ToastDuration::Timed(3000))
     }
 
-    pub fn error(msg: impl Into<String>) -> Self {
+    pub fn _error(msg: impl Into<String>) -> Self {
         Self::new(msg, ToastKind::Error, ToastDuration::Timed(5000))
     }
 
-    pub fn info(msg: impl Into<String>) -> Self {
+    pub fn _info(msg: impl Into<String>) -> Self {
         Self::new(msg, ToastKind::Info, ToastDuration::Timed(3000))
     }
 
