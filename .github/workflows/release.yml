@@ -112,6 +112,7 @@ jobs:
       - name: Aggregate checksums
         run: |
           find artifacts -name 'SHA256SUMS-*' -exec cat {} + > artifacts/SHA256SUMS
+          find artifacts -name 'SHA256SUMS-*' -delete
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3

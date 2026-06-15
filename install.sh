@@ -80,13 +80,33 @@ TMP_DIR=$(mktemp -d)
 curl -sSL "$DOWNLOAD_URL" | tar -xz -C "$TMP_DIR" &
 spin $! "Downloading ${BOLD}sounds $LATEST_RELEASE${NC}"
 
-# Install
-info "Installing to ${BOLD}/usr/local/bin${NC}..."
-if [ -w /usr/local/bin ]; then
-    mv "$TMP_DIR/$BINARY_NAME" /usr/local/bin/$BINARY_NAME
-else
-    sudo mv "$TMP_DIR/$BINARY_NAME" /usr/local/bin/$BINARY_NAME
-fi
+# Install to ~/.local/bin
+INSTALL_DIR="$HOME/.local/bin"
+info "Installing to ${BOLD}$INSTALL_DIR${NC}..."
+mkdir -p "$INSTALL_DIR"
+mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+
+# Add to PATH if not present
+case ":$PATH:" in
+    *:"$INSTALL_DIR":*) ;;
+    *)
+        info "Adding $INSTALL_DIR to PATH..."
+        SHELL_PROFILE=""
+        if [ -n "$ZSH_VERSION" ] || [ -f "$HOME/.zshrc" ]; then
+            SHELL_PROFILE="$HOME/.zshrc"
+        elif [ -n "$BASH_VERSION" ] || [ -f "$HOME/.bashrc" ]; then
+            SHELL_PROFILE="$HOME/.bashrc"
+        fi
+
+        if [ -n "$SHELL_PROFILE" ]; then
+            echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$SHELL_PROFILE"
+            info "Added $INSTALL_DIR to PATH in $SHELL_PROFILE"
+            info "Restart your terminal or run: source $SHELL_PROFILE"
+        else
+            info "Could not detect shell profile. Add $INSTALL_DIR to PATH manually."
+        fi
+        ;;
+esac
 
 rm -rf "$TMP_DIR"
 
