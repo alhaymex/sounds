@@ -39,6 +39,12 @@ impl Favorites {
     pub fn save_to(&self, path: impl AsRef<Path>) -> Result<()> {
         let path = path.as_ref();
 
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).with_context(|| {
+                format!("failed to create {}", parent.display())
+            })?;
+        }
+
         let contents = toml::to_string_pretty(self)
             .context("failed to serialize favorites")?;
 
@@ -46,6 +52,17 @@ impl Favorites {
             .with_context(|| format!("failed to write {}", path.display()))?;
 
         Ok(())
+    }
+
+    pub fn toggle_favorite(&mut self, path: &Path) -> bool {
+        let path = path.to_path_buf();
+        if self.songs.contains(&path) {
+            self.songs.remove(&path);
+            false
+        } else {
+            self.songs.insert(path);
+            true
+        }
     }
 }
 

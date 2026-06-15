@@ -11,7 +11,10 @@ use crate::{
         model::{Library, Node, SongId},
         scan::{find_dir_by_path, scan_library},
     },
-    system::settings::{Settings, default_library_dir},
+    system::{
+        favorites::Favorites,
+        settings::{Settings, default_library_dir},
+    },
     tui::{help::help_items, toast::Toast},
 };
 use crate::{
@@ -86,6 +89,7 @@ pub struct App {
     pub screen: Screen,
     pub navigation_stack: Vec<Screen>,
     pub library: Library,
+    pub favorites: Favorites,
     pub should_quit: bool,
     pub playback: PlaybackState,
     pub tick: u64,
@@ -109,8 +113,11 @@ impl App {
 
         let library = scan_library(&library_dir)?;
 
+        let favorites = Favorites::load()?;
+
         Ok(Self {
             library,
+            favorites,
             screen: Screen::Library {
                 path: library_dir,
                 selected: 0,
@@ -245,13 +252,13 @@ impl App {
         }
     }
 
-    pub fn selected_song_path(&self) -> Option<&Path> {
+    pub fn selected_song_path(&self) -> Option<PathBuf> {
         let song_id = self.selected_song_id()?;
 
         self.library
             .index
             .get(song_id)
-            .map(|song| song.path.as_path())
+            .map(|song| song.path.clone())
     }
 
     pub fn next_song_id(&self) -> Option<SongId> {
@@ -764,7 +771,22 @@ impl App {
         self.toasts.retain(|t| t.id != id);
     }
 
-    pub fn add_to_favorites(&self) {}
+    pub fn add_to_favorites(&mut self) -> Result<()> {
+        let Some(path) = self.selected_song_path() else {
+            return Ok(());
+        };
+
+        let added = self.favorites.toggle_favorite(&path);
+        self.favorites.save()?;
+
+        self.push_toast(Toast::success(if added {
+            "Added to favorites"
+        } else {
+            "Removed from favorites"
+        }));
+
+        Ok(())
+    }
 }
 
 fn count_songs(node: &Node) -> usize {
