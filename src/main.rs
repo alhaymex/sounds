@@ -53,18 +53,45 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-// Only work for linux/macos
 fn update() -> Result<()> {
+    let (target, bin_path) = update_target();
+
     println!("Updating sounds...");
 
-    let status = std::process::Command::new("bash")
-        .arg("-c")
-        .arg("curl -sSL https://raw.githubusercontent.com/alhaymex/sounds/main/install.sh | bash")
-        .status()?;
+    let status = self_update::backends::github::Update::configure()
+        .repo_owner("alhaymex")
+        .repo_name("sounds")
+        .bin_name("sounds")
+        .target(target)
+        .bin_path_in_archive(bin_path)
+        .show_download_progress(true)
+        .show_output(true)
+        .no_confirm(false)
+        .build()?
+        .update()?;
 
-    if !status.success() {
-        anyhow::bail!("Update failed");
+    match status {
+        self_update::Status::Updated(version) => {
+            println!("Updated to v{version}");
+        }
+        self_update::Status::UpToDate(version) => {
+            println!("Already up to date (v{version})");
+        }
     }
 
     Ok(())
+}
+
+fn update_target() -> (&'static str, &'static str) {
+    if cfg!(target_os = "windows") {
+        ("windows-x86_64", "sounds.exe")
+    } else if cfg!(target_os = "macos") {
+        if cfg!(target_arch = "aarch64") {
+            ("macos-arm64", "sounds")
+        } else {
+            ("macos-x86_64", "sounds")
+        }
+    } else {
+        ("linux-x86_64", "sounds")
+    }
 }
