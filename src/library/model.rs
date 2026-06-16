@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, time::SystemTime};
 
 pub type SongId = usize;
 
@@ -17,13 +17,10 @@ pub enum Node {
 #[derive(Debug, Clone)]
 pub struct SongRef {
     pub id: SongId,
-
     pub path: PathBuf,
-
-    /// Display title. fallback to filename
     pub title: String,
-
     pub metadata: Metadata,
+    pub modified: SystemTime,
 }
 
 #[derive(Debug, Clone, Default)]

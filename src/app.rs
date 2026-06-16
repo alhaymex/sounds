@@ -1,5 +1,8 @@
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
 
 use crate::library::{
     model::{Library, Node},
@@ -119,9 +122,46 @@ impl App {
             })
             .collect::<Vec<_>>();
 
-        entries.sort_by_key(|entry| match entry {
-            DirEntry::Dir { .. } => 0,
-            DirEntry::Song { .. } => 1,
+        entries.sort_by(|a, b| {
+            let a_kind = match a {
+                DirEntry::Dir { .. } => 0,
+                DirEntry::Song { .. } => 1,
+            };
+            let b_kind = match b {
+                DirEntry::Dir { .. } => 0,
+                DirEntry::Song { .. } => 1,
+            };
+
+            a_kind.cmp(&b_kind).then_with(|| {
+                // If both are songs, compare by modified time (newest first), then title.
+                let (a_id, a_title) = if let DirEntry::Song { id, title } = a {
+                    (*id, title)
+                } else {
+                    return std::cmp::Ordering::Equal;
+                };
+
+                let (b_id, b_title) = if let DirEntry::Song { id, title } = b {
+                    (*id, title)
+                } else {
+                    return std::cmp::Ordering::Equal;
+                };
+
+                let a_modified = self
+                    .library
+                    .index
+                    .get(a_id)
+                    .map(|s| s.modified)
+                    .unwrap_or(SystemTime::UNIX_EPOCH);
+
+                let b_modified = self
+                    .library
+                    .index
+                    .get(b_id)
+                    .map(|s| s.modified)
+                    .unwrap_or(SystemTime::UNIX_EPOCH);
+
+                b_modified.cmp(&a_modified).then(a_title.cmp(b_title))
+            })
         });
 
         entries

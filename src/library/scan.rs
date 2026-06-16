@@ -1,4 +1,5 @@
 use std::fs;
+use std::time::SystemTime;
 use std::{io, path::Path};
 
 use super::{
@@ -36,7 +37,8 @@ pub fn scan_dir(dir: &Path, index: &mut Vec<SongRef>) -> io::Result<Node> {
     };
 
     for entry in entries {
-        let path = entry?.path();
+        let entry = entry?;
+        let path = entry.path();
 
         if path.is_dir() {
             match scan_dir(&path, index) {
@@ -50,6 +52,10 @@ pub fn scan_dir(dir: &Path, index: &mut Vec<SongRef>) -> io::Result<Node> {
             }
         } else if is_audio_file(&path) {
             let id = index.len();
+            let modified = entry
+                .metadata()
+                .and_then(|m| m.modified())
+                .unwrap_or(SystemTime::UNIX_EPOCH);
 
             let metadata = read_metadata(&path);
             let title = metadata
@@ -62,6 +68,7 @@ pub fn scan_dir(dir: &Path, index: &mut Vec<SongRef>) -> io::Result<Node> {
                 path: path.clone(),
                 title,
                 metadata,
+                modified,
             });
 
             children.push(Node::Song { id });
