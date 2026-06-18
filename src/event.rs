@@ -123,11 +123,11 @@ pub fn handle_key(
                     }
                     return Ok(());
                 }
-                KeyCode::Up | KeyCode::Char('k') => {
+                KeyCode::Up => {
                     app.search_up();
                     return Ok(());
                 }
-                KeyCode::Down | KeyCode::Char('j') => {
+                KeyCode::Down => {
                     app.search_down();
                     return Ok(());
                 }
