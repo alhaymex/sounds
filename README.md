@@ -90,6 +90,7 @@ sounds download https://youtube.com/watch?v=dQw4w9WgXcQ
 - [x] macOS support
 - [x] Search
 - [x] YouTube integration via yt-dlp
+- [ ] MPRIS
 
 ## License
 
